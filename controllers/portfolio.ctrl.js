@@ -5,12 +5,7 @@ const SEED_DATA = require("../seed.json");
 const PortfolioController = {
   getPortfolioData: async (req, res) => {
     try {
-      let data = await Portfolio.findOne();
-
-      if (!data) {
-        console.log("⚠️ Database empty. Seeding initial data...");
-        data = await Portfolio.create(SEED_DATA);
-      }
+      const data = await Portfolio.findOne();
 
       res.json({ success: true, data });
     } catch (error) {
