@@ -1,6 +1,5 @@
 const { parseId } = require("../lib/helper");
 const { Portfolio } = require("../models/portfolio.model");
-const SEED_DATA = require("../seed.json");
 
 const PortfolioController = {
   getPortfolioData: async (req, res) => {
