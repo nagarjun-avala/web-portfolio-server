@@ -1,3 +1,4 @@
+const { sendContactEmail } = require("../lib/email");
 const { Message } = require("../models/message.model");
 
 const ContactController = {
@@ -10,6 +11,9 @@ const ContactController = {
           .json({ success: false, message: "All fields are required." });
       }
       await Message.create({ name, email, message });
+      console.log("Before Send Email Data", { name, email, message });
+
+      await sendContactEmail({ name, email, message });
       res
         .status(201)
         .json({ success: true, message: "Message sent successfully!" });

@@ -36,7 +36,7 @@ async function main() {
   // Graceful Shutdown
   process.on("SIGTERM", async () => {
     console.log("SIGTERM signal received: closing HTTP server");
-    await db.$disconnect();
+    // await db.$disconnect();
     server.close(() => {
       console.log("HTTP server closed");
     });
