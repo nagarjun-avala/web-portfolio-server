@@ -1,6 +1,6 @@
 const requireAdmin = (req, res, next) => {
   const apiKey = req.headers["x-api-key"];
-  if (apiKey && apiKey === ADMIN_API_KEY) {
+  if (apiKey && apiKey === process.env.ADMIN_API_KEY) {
     next();
   } else {
     res

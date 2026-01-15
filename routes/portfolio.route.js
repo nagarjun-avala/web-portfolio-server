@@ -4,25 +4,31 @@ const { Router } = require("express");
 const PortfolioController = require("../controllers/portfolio.ctrl");
 const router = Router();
 
-// Mount routes
+// GET /api/portfolio (Aggregated Response)
 router.get("/", PortfolioController.getPortfolioData);
 
-// Admin
+// PATCH /api/portfolio (Update Profile/Singleton)
+router.patch("/", requireAdmin, PortfolioController.updatePatch);
+
+// POST /api/portfolio/item/:section (Create Item)
 router.post(
   "/item/:section",
   requireAdmin,
   PortfolioController.createPortfolioSection
 );
-router.post(
+
+// PUT /api/portfolio/item/:section/:id (Update Item)
+router.put(
   "item/:section/:id",
   requireAdmin,
   PortfolioController.updateSpecificSectionItem
 );
-router.patch("/", requireAdmin, PortfolioController.updatePatch);
+
+// DELETE /api/portfolio/item/:section/:id (Delete Item)
 router.delete(
   "/item/:section/:id",
   requireAdmin,
-  PortfolioController.updatePatch
+  PortfolioController.deleteSpecificSectionItemId
 );
 router.delete("/", requireAdmin, PortfolioController.deleteEntirePortfolio);
 

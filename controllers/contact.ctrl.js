@@ -1,26 +1,17 @@
 const { sendContactEmail } = require("../lib/email");
-const { Message } = require("../models/message.model");
+const { Message } = require("../models/collections.model");
 
 const ContactController = {
   sendMessage: async (req, res) => {
     try {
       const { name, email, message } = req.body;
-      if (!name || !email || !message) {
-        return res
-          .status(400)
-          .json({ success: false, message: "All fields are required." });
-      }
+      if (!name || !email || !message)
+        return res.status(400).json({ success: false });
       await Message.create({ name, email, message });
-      console.log("Before Send Email Data", { name, email, message });
-
       await sendContactEmail({ name, email, message });
-      res
-        .status(201)
-        .json({ success: true, message: "Message sent successfully!" });
-    } catch (error) {
-      res
-        .status(500)
-        .json({ success: false, message: "Failed to send message." });
+      res.status(201).json({ success: true, message: "Sent" });
+    } catch (err) {
+      res.status(500).json({ success: false });
     }
   },
 };

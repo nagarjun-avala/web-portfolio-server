@@ -1,4 +1,4 @@
-const { Message } = require("../models/message.model");
+const { Message } = require("../models/collections.model");
 
 const MessageController = {
   getMessages: async (req, res) => {

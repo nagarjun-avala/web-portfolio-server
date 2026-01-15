@@ -5,6 +5,6 @@ const router = Router();
 
 // Admin
 router.get("/", requireAdmin, MessageController.getMessages);
-router.delete("/:id", requireAdmin, MessageController.getMessages);
+router.delete("/:id", requireAdmin, MessageController.deleteMessage);
 
 module.exports = router;
