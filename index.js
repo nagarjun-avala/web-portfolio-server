@@ -1,8 +1,6 @@
 require("dotenv").config();
 const { createServer } = require("./server");
-const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
 
 async function main() {
   // allow secret files if used: load them into env if present
@@ -17,7 +15,6 @@ async function main() {
   const MONGO_URI =
     process.env.MONGO_URI || "mongodb://localhost:27017/portfolio_db";
   // Simple security for updates (Use a strong string in production .env)
-  const ADMIN_API_KEY = process.env.ADMIN_API_KEY || "my-secret-admin-key";
 
   // --- MONGODB CONNECTION ---
   mongoose
@@ -30,7 +27,6 @@ async function main() {
   const server = app.listen(port, async () => {
     // _log(`🚀 Server running on http://localhost:${port}`);
     console.log(`🚀 Server running on http://localhost:${port}`);
-    console.log(`🔑 Admin Key configured: ${ADMIN_API_KEY}`);
   });
 
   // Graceful Shutdown

@@ -1,51 +1,104 @@
-const { parseId } = require("../lib/helper");
-const { Portfolio } = require("../models/portfolio.model");
+const { parseId, seedIfNeeded } = require("../lib/helper");
+const {
+  Project,
+  Experience,
+  Education,
+  Certification,
+  Blog,
+} = require("../models/collections.model");
+const { Profile } = require("../models/profile.model");
 
 const PortfolioController = {
   getPortfolioData: async (req, res) => {
     try {
-      const data = await Portfolio.findOne();
+      // Parallel fetch for performance
+      const [profile, projects, experience, education, certifications, blogs] =
+        await Promise.all([
+          Profile.findOne(),
+          Project.find().sort({ order: 1, _id: -1 }),
+          Experience.find().sort({ start: -1 }),
+          Education.find().sort({ year: -1 }),
+          Certification.find().sort({ issueDate: -1 }),
+          Blog.find().sort({ date: -1 }),
+        ]);
 
-      res.json({ success: true, data });
+      if (!profile) {
+        await seedIfNeeded();
+        return res
+          .status(404)
+          .json({ success: false, message: "Profile not initialized" });
+      }
+
+      // Construct the legacy JSON structure expected by frontend
+      const responseData = {
+        ...profile.toObject(),
+        projects,
+        experience,
+        education,
+        certifications,
+        blogs,
+      };
+
+      res.json({ success: true, data: responseData });
     } catch (error) {
       console.error("Fetch Error:", error);
       res.status(500).json({ success: false, message: "Server Error" });
     }
   },
 
-  createPortfolioSection: async (req, res) => {
+  createPortfolioSection: async (req, res) => async (req, res) => {
     try {
-      const { section } = req.params;
-      const allowedSections = [
-        "projects",
-        "experience",
-        "education",
-        "certifications",
-        "blogs",
-      ];
+      const Model = getModelBySection(req.params.section);
+      if (!Model)
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid section" });
 
-      if (!allowedSections.includes(section)) {
-        return res.status(400).json({
-          success: false,
-          message: `Invalid section. Allowed: ${allowedSections.join(", ")}`,
-        });
-      }
+      const newItem = new Model(req.body);
+      // Ensure ID exists (frontend usually provides Date.now(), if not generate one)
+      if (!newItem.id) newItem.id = new mongoose.Types.ObjectId().toString();
 
-      // Add ID if missing
-      const newItem = { ...req.body };
-      if (!newItem.id) newItem.id = Date.now(); // Simple ID generation
+      await newItem.save();
 
-      const updated = await Portfolio.findOneAndUpdate(
-        {},
-        { $push: { [section]: newItem } },
-        { new: true }
-      );
+      // Return the FULL updated list to keep frontend state sync easy
+      // Alternatively, return just the new item and let frontend handle it.
+      // Current frontend expects the full updated list for that section in the 'data' key relative to the whole portfolio?
+      // Looking at previous admin_dashboard, it sets data(resData.data).
+      // Wait, the previous server returned the *entire* portfolio object on every update.
+      // To maintain compatibility without rewriting frontend state logic:
+      // We must return the *entire* portfolio structure or specific section list?
+      // The previous code: `res.json({ ..., data: updated });` where `updated` was the whole portfolio doc.
+      // So we need to re-fetch the whole portfolio structure or fix the frontend.
+      // For "optimization", re-fetching everything is bad.
+      // BUT, to keep compatibility with the provided frontend code:
 
-      res.json({
-        success: true,
-        message: `Item added to ${section}`,
-        data: updated,
-      });
+      // OPTIMIZED APPROACH:
+      // We will return the *updated list* for that section only if possible,
+      // BUT the frontend `setPortfolioData(data.data)` expects the full object.
+      // Let's re-fetch only what's needed or re-construct.
+      // Ideally, we fetch everything again to ensure sync.
+
+      // Re-fetch all (Trade-off for compatibility)
+      const [profile, projects, experience, education, certifications, blogs] =
+        await Promise.all([
+          Profile.findOne(),
+          Project.find(),
+          Experience.find(),
+          Education.find(),
+          Certification.find(),
+          Blog.find(),
+        ]);
+
+      const responseData = {
+        ...profile.toObject(),
+        projects,
+        experience,
+        education,
+        certifications,
+        blogs,
+      };
+
+      res.json({ success: true, message: "Item added", data: responseData });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
@@ -53,48 +106,73 @@ const PortfolioController = {
 
   updateSpecificSectionItem: async (req, res) => {
     try {
-      const { section, id } = req.params;
-      const parsedId = parseId(id); // Handle string vs number IDs
-
-      // We use the positional operator $ to update the specific item in the array
-      const updated = await Portfolio.findOneAndUpdate(
-        { [`${section}.id`]: parsedId },
-        { $set: { [`${section}.$`]: { ...req.body, id: parsedId } } }, // Preserve ID
-        { new: true }
-      );
-
-      if (!updated) {
+      const Model = getModelBySection(req.params.section);
+      if (!Model)
         return res
-          .status(404)
-          .json({ success: false, message: "Item not found in portfolio" });
-      }
+          .status(400)
+          .json({ success: false, message: "Invalid section" });
 
-      res.json({
-        success: true,
-        message: `Item updated in ${section}`,
-        data: updated,
-      });
+      // Use custom 'id' field, not _id
+      await Model.findOneAndUpdate({ id: req.params.id }, req.body);
+
+      // Re-fetch aggregate (Compatibility)
+      // In a pure specialized API, we'd just return the updated item.
+      const [profile, projects, experience, education, certifications, blogs] =
+        await Promise.all([
+          Profile.findOne(),
+          Project.find(),
+          Experience.find(),
+          Education.find(),
+          Certification.find(),
+          Blog.find(),
+        ]);
+
+      const responseData = {
+        ...profile.toObject(),
+        projects,
+        experience,
+        education,
+        certifications,
+        blogs,
+      };
+
+      res.json({ success: true, message: "Item updated", data: responseData });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
   },
 
-  deleteSpecificSectionItem: async (req, res) => {
+  deleteSpecificSectionItemId: async (req, res) => {
     try {
-      const { section, id } = req.params;
-      const parsedId = parseId(id);
+      const Model = getModelBySection(req.params.section);
+      if (!Model)
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid section" });
 
-      const updated = await Portfolio.findOneAndUpdate(
-        {},
-        { $pull: { [section]: { id: parsedId } } },
-        { new: true }
-      );
+      await Model.findOneAndDelete({ id: req.params.id });
 
-      res.json({
-        success: true,
-        message: `Item deleted from ${section}`,
-        data: updated,
-      });
+      // Re-fetch aggregate
+      const [profile, projects, experience, education, certifications, blogs] =
+        await Promise.all([
+          Profile.findOne(),
+          Project.find(),
+          Experience.find(),
+          Education.find(),
+          Certification.find(),
+          Blog.find(),
+        ]);
+
+      const responseData = {
+        ...profile.toObject(),
+        projects,
+        experience,
+        education,
+        certifications,
+        blogs,
+      };
+
+      res.json({ success: true, message: "Item deleted", data: responseData });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
@@ -117,20 +195,22 @@ const PortfolioController = {
    */
   updatePatch: async (req, res) => {
     try {
-      const updated = await Portfolio.findOneAndUpdate(
+      // We only update the fields present in req.body.hero, req.body.about, etc.
+      // Since profile is flat fields + nested objects, we use dot notation for deep updates if needed,
+      // or simply findOneAndUpdate with $set.
+
+      // Note: The frontend sends { hero: {...} } or { about: {...} } or { techStack: {...} }
+      // Mongoose updateOne with shallow merge is usually strictly replacing the object.
+      // For deep merge, we might need a utility, but standard $set works for top-level keys provided.
+
+      const updated = await Profile.findOneAndUpdate(
         {},
         { $set: req.body },
         { new: true, upsert: true }
       );
-
-      return res.status(201).json({
-        success: true,
-        message: "Portfolio patched successfully",
-        data: updated,
-      });
+      res.json({ success: true, message: "Profile updated", data: updated });
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({ success: false, message: error.message });
+      res.status(500).json({ success: false, message: error.message });
     }
   },
 };

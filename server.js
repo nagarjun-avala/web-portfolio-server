@@ -4,6 +4,7 @@ const { json, urlencoded } = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 const bodyParser = require("body-parser");
+const rateLimit = require("express-rate-limit");
 const { errorHandler } = require("./middleware/errorHandler");
 
 // Routes
@@ -41,11 +42,21 @@ const createServer = () => {
   // 1. Middleware
   app.use(express.json());
   app.use(helmet());
-  app.use(cors(corsOptions));
+  app.use(cors());
+  // app.use(cors(corsOptions));
   app.use(json());
   app.use(bodyParser.json());
   app.use(urlencoded({ extended: true }));
   app.use(morgan("dev"));
+
+  // Rate Limiting (Basic DDoS protection)
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+  app.use(limiter);
 
   // 2. Routes
   app.use("/api/v1", routes);
