@@ -1,0 +1,19 @@
+services:
+  # Your Express Server
+  api:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=${PORT}
+      # Connect to the 'mongo' service defined below
+      - MONGO_URI=${MONGO_URI}
+      # Pass through other secrets (or use an .env file)
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - NODE_ENV=${NODE_ENV}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - FORCE_COLOR=${FORCE_COLOR}
+      - LOG_EMOJI=${LOG_EMOJI}
+    restart: always
