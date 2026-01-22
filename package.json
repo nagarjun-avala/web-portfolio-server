@@ -13,8 +13,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js",
-    "test": "jest --detectOpenHandles --setupFiles dotenv/config"
+    "dev": "nodemon index.js"
   },
   "dependencies": {
     "body-parser": "^2.2.2",
