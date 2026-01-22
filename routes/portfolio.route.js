@@ -2,10 +2,11 @@ const { requireAdmin } = require("../middleware/admin.middle");
 
 const { Router } = require("express");
 const PortfolioController = require("../controllers/portfolio.ctrl");
+const asyncHandler = require("../utils/asyncHandler");
 const router = Router();
 
 // GET /api/portfolio (Aggregated Response)
-router.get("/", PortfolioController.getPortfolioData);
+router.get("/", asyncHandler(PortfolioController.getPortfolioData));
 
 // PATCH /api/portfolio (Update Profile/Singleton)
 router.patch("/", requireAdmin, PortfolioController.updatePatch);
