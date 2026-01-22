@@ -53,7 +53,7 @@ const createServer = () => {
     app.use(
       morgan("short", {
         skip: (req) => req.originalUrl === "/favicon.ico",
-      })
+      }),
     );
   }
 
@@ -68,11 +68,11 @@ const createServer = () => {
   app.use(requestLogger); // 👈 MUST be early
 
   // 2. Routes
-  app.use("/api/v1", routes);
+  app.use("/api", routes);
 
   // 3. Health Check
   app.get("/", (_req, res) =>
-    res.json({ status: "ok", version: "1.0.0", timestamp: new Date() })
+    res.json({ status: "ok", version: "1.0.0", timestamp: new Date() }),
   );
 
   // 4. Global Error Handler

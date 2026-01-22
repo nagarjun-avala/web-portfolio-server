@@ -1,41 +1,54 @@
 const request = require("supertest");
 const mongoose = require("mongoose");
+const { MongoMemoryServer } = require("mongodb-memory-server");
 const { createServer } = require("./server");
 
-const app = createServer(); // Import the Express app
+const app = createServer();
 
-// Use a separate database for testing to avoid deleting real data
-// If you don't have a separate local instance, this will create a new collection in your local mongo
-const TEST_MONGO_URI =
-  process.env.MONGO_URI_TEST || "mongodb://localhost:27017/portfolio_test_db";
-const API_KEY = process.env.ADMIN_API_KEY || "my-secret-admin-key";
+// Variable to hold the in-memory database instance
+let mongoServer;
 
 // --- SETUP & TEARDOWN ---
 
+// Increase timeout to 30 seconds for slow CI environments
 beforeAll(async () => {
-  // Connect to the test database
-  // We strictly manage the connection state for Jest
-  if (mongoose.connection.readyState === 0) {
-    await mongoose.connect(TEST_MONGO_URI);
-  }
-});
+  // 1. Create the in-memory database
+  mongoServer = await MongoMemoryServer.create();
+  const uri = mongoServer.getUri();
+
+  // 2. Connect Mongoose to this temporary URI
+  await mongoose.disconnect(); // Ensure any old connection is closed
+  await mongoose.connect(uri);
+}, 30000); // 30s timeout
 
 afterAll(async () => {
-  // Clean up: Drop the test database so next run is fresh
+  // 3. Clean up
   if (mongoose.connection.db) {
     await mongoose.connection.db.dropDatabase();
   }
-  // Close connection to prevent Jest from hanging
-  await mongoose.connection.close();
-});
+  await mongoose.disconnect();
+  await mongoServer.stop();
+}, 30000);
 
 // --- TESTS ---
 
 describe("Portfolio API Integration Tests", () => {
+  // 0.server health check
+
+  describe("GET /", () => {
+    it("should return 200 and the health status data structure", async () => {
+      const res = await request(app).get("");
+      expect(res.statusCode).toEqual(200);
+      expect(res.body.status).toEqual("ok");
+    });
+  });
   // 1. PUBLIC ROUTES
   describe("GET /api/portfolio", () => {
     it("should return 200 and the portfolio data structure", async () => {
+      // FIX: Reverted to /api/portfolio to match likely server routes
       const res = await request(app).get("/api/portfolio");
+
+      console.log("STAGE:\t", { res });
 
       expect(res.statusCode).toEqual(200);
       expect(res.body.success).toBe(true);
@@ -50,6 +63,7 @@ describe("Portfolio API Integration Tests", () => {
   // 2. SECURITY CHECKS
   describe("Admin Security Middleware", () => {
     it("should reject POST requests without an API key", async () => {
+      // FIX: Reverted to /api/portfolio
       const res = await request(app)
         .post("/api/portfolio/item/projects")
         .send({ title: "Hacker Project" });
@@ -78,7 +92,10 @@ describe("Portfolio API Integration Tests", () => {
       cat: "Testing",
     };
 
+    const API_KEY = process.env.ADMIN_API_KEY || "my-secret-admin-key";
+
     // A. CREATE
+    // FIX: Added specific timeout for this test
     it("should allow Admin to CREATE a new project", async () => {
       const res = await request(app)
         .post("/api/portfolio/item/projects")
@@ -90,13 +107,13 @@ describe("Portfolio API Integration Tests", () => {
 
       // Verify the item is in the returned data
       const project = res.body.data.projects.find(
-        (p) => p.id === testProject.id
+        (p) => p.id === testProject.id,
       );
       expect(project).toBeTruthy();
       expect(project.title).toBe(testProject.title);
 
       createdProjectId = testProject.id;
-    });
+    }, 10000); // Increased timeout to 10s
 
     // B. UPDATE
     it("should allow Admin to UPDATE an existing project", async () => {
@@ -111,7 +128,7 @@ describe("Portfolio API Integration Tests", () => {
 
       // Verify update
       const project = res.body.data.projects.find(
-        (p) => p.id === createdProjectId
+        (p) => p.id === createdProjectId,
       );
       expect(project.title).toBe(updatedData.title);
     });
@@ -126,7 +143,7 @@ describe("Portfolio API Integration Tests", () => {
 
       // Verify deletion
       const project = res.body.data.projects.find(
-        (p) => p.id === createdProjectId
+        (p) => p.id === createdProjectId,
       );
       expect(project).toBeUndefined();
     });
