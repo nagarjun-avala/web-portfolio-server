@@ -1,5 +1,5 @@
 # Use specific version for stability (Alpine is lightweight)
-FROM node:20-alpine
+FROM node:22
 
 # Set working directory inside the container
 WORKDIR /app
@@ -19,4 +19,4 @@ COPY . .
 EXPOSE 5000
 
 # Start the application
-CMD ["node", "index.js"]
+CMD ["npm", "start"]

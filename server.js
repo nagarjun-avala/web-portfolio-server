@@ -5,10 +5,11 @@ const cors = require("cors");
 const morgan = require("morgan");
 const bodyParser = require("body-parser");
 const rateLimit = require("express-rate-limit");
-const { errorHandler } = require("./middleware/errorHandler");
 
 // Routes
 const routes = require("./routes");
+const requestLogger = require("./middleware/requestLogger.middleware");
+const errorCapture = require("./middleware/errorCapture.middleware");
 
 const createServer = () => {
   const app = express();
@@ -47,7 +48,14 @@ const createServer = () => {
   app.use(json());
   app.use(bodyParser.json());
   app.use(urlencoded({ extended: true }));
-  app.use(morgan("dev"));
+
+  if (process.env.NODE_ENV !== "production") {
+    app.use(
+      morgan("short", {
+        skip: (req) => req.originalUrl === "/favicon.ico",
+      })
+    );
+  }
 
   // Rate Limiting (Basic DDoS protection)
   const limiter = rateLimit({
@@ -57,18 +65,18 @@ const createServer = () => {
     legacyHeaders: false,
   });
   app.use(limiter);
+  app.use(requestLogger); // 👈 MUST be early
 
   // 2. Routes
   app.use("/api/v1", routes);
 
   // 3. Health Check
-  app.get("/", (_req, res) => res.json({ status: "ok", version: "1.0.0" }));
-  app.get("/health", (req, res) => {
-    res.json({ status: "ok", timestamp: new Date() });
-  });
+  app.get("/", (_req, res) =>
+    res.json({ status: "ok", version: "1.0.0", timestamp: new Date() })
+  );
 
   // 4. Global Error Handler
-  app.use(errorHandler);
+  app.use(errorCapture);
 
   // fallback 404
   app.use((_req, res) => res.status(404).json({ error: "Not found" }));
