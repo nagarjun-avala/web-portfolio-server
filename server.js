@@ -43,8 +43,8 @@ const createServer = () => {
   // 1. Middleware
   app.use(express.json());
   app.use(helmet());
-  app.use(cors());
-  // app.use(cors(corsOptions));
+  // app.use(cors());
+  app.use(cors(corsOptions));
   app.use(json());
   app.use(bodyParser.json());
   app.use(urlencoded({ extended: true }));
