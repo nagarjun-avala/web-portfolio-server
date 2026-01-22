@@ -3,60 +3,53 @@ name: Production Deploy
 on:
   push:
     branches: ["main"]
+  pull_request:
+    branches: ["main"]
 
 jobs:
-  # Job 1: Final Test Check
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "npm"
-      - run: npm ci
-
-  # Job 2: Build & Deploy (Only if tests pass)
+  # Job 1: Build & Deploy (Only runs on PUSH to main, not PRs)
   deploy:
-    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 1. Login to Docker Hub
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 2. Build & Push Docker Image
-      - name: Build and Push
+      - name: Build and Push Docker Image
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:latest
 
-      # 3. Deploy to AWS via SSH
-      - name: Deploy to EC2
+      - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Stop old container
+            # 1. Stop and remove the old container
             docker stop backend || true
             docker rm backend || true
 
-            # Pull new image
+            # 2. Pull the fresh image
             docker pull ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:latest
 
-            # Start new container
+            # 3. Start the new container with production Environment Variables
             docker run -d \
               --name backend \
               -p 5000:5000 \
-              -e FRONTEND_URL=https://nagarjun-avala.vercel.app \
+              --restart unless-stopped \
+              -e PORT=5000 \
+              -e DATABASE_URL='${{ secrets.DATABASE_URL }}' \
+              -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+              -e ADMIN_API_KEY='${{ secrets.ADMIN_API_KEY }}' \
+              -e FRONTEND_URL='https://your-frontend.vercel.app' \
               ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:latest
