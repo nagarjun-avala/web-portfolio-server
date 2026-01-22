@@ -1,3 +1,16 @@
 node_modules
-.env*
+
+# ENV
+.env
+.env.local
+.env.pro
+.env.dev
+
+# Files
 seed.json
+coverage
+
+# IDE
+.idea
+
+# extras
