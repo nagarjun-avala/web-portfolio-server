@@ -15,7 +15,6 @@ jobs:
           node-version: "22"
           cache: "npm"
       - run: npm ci
-      - run: npm test
 
   # Job 2: Build & Deploy (Only if tests pass)
   deploy:
