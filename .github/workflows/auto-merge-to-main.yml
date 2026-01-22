@@ -4,6 +4,10 @@ on:
   push:
     branches: ["development"]
 
+# 🟢 FIX: Explicitly grant write permission to the GITHUB_TOKEN
+permissions:
+  contents: write
+
 jobs:
   sync-branches:
     runs-on: ubuntu-latest
