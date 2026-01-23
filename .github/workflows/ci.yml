@@ -53,7 +53,9 @@ jobs:
               --restart unless-stopped \
               -e PORT=${{ secrets.PORT }} \
               -e DATABASE_URL='${{ secrets.DATABASE_URL }}' \
-              -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+              -e RESEND_API_KEY='${{ secrets.RESEND_API_KEY }}' \
               -e ADMIN_API_KEY='${{ secrets.ADMIN_API_KEY }}' \
               -e FRONTEND_URL='${{ secrets.FRONTEND_URL }}' \
+              -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+              -e NODE_ENV='production' \
               ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:latest

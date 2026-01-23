@@ -143,7 +143,7 @@ module.exports = function requestLogger(req, res, next) {
         `${color}${res.statusCode}${colors.reset} ` +
         `${colors.dim}${duration.toFixed(1)}ms${colors.reset} ` +
         `🧠 ${ua.browser.name ?? "?"} · ${ua.os.name ?? "?"}` +
-        (logData.isBot ? " 🤖" : "")
+        (logData.isBot ? " 🤖" : ""),
     );
   });
 
