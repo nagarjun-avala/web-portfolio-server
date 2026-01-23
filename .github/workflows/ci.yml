@@ -3,9 +3,6 @@ name: Production Deploy
 on:
   push:
     branches: ["main"]
-  # Optional: Also run on PRs just to test the BUILD (but skip deploy)
-  pull_request:
-    branches: ["main"]
 
 jobs:
   # JOB 1: BUILD & PUSH (Runs on push & PRs)
