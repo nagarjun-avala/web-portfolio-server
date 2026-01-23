@@ -14,7 +14,7 @@ const errorCapture = require("./middleware/errorCapture.middleware");
 const createServer = () => {
   const app = express();
   const FRONTEND_URLS = (
-    process.env.ALLOWED_ORIGINS || "http://localhost:3000"
+    process.env.FRONTEND_URL || "http://localhost:3000"
   ).split(",");
 
   // CORS options
