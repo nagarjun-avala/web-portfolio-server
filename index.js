@@ -17,7 +17,7 @@ async function main() {
   const app = createServer();
   // 5. Start Server
 
-  const server = app.listen(port, async () => {
+  const server = app.listen(port, "0.0.0.0", async () => {
     log("debug", `🚀 Server running on http://localhost:${port}`);
   });
 
