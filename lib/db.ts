@@ -1,5 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import logger from '@/utils/logger';
+import { PrismaClient } from "@prisma/client";
+import logger from "@/utils/logger";
 
 /**
  * Enterprise Database Client (Simplified)
@@ -15,17 +15,22 @@ const prisma = new PrismaClient({} as any);
  */
 export const connectDB = async (): Promise<void> => {
   const start = Date.now();
-  const dbType = process.env.DATABASE_URL?.startsWith('mongodb') ? 'MongoDB' : 'PostgreSQL';
+  const dbType = process.env.DATABASE_URL?.startsWith("mongodb")
+    ? "MongoDB"
+    : "PostgreSQL";
 
   try {
     await prisma.$connect();
     const duration = Date.now() - start;
     logger.success(`✅ Database connection established`, {
       duration: `${duration}ms`,
-      provider: dbType.toLowerCase()
+      provider: dbType.toLowerCase(),
     });
   } catch (error) {
-    logger.error(`❌ Failed to connect to ${dbType}`, error instanceof Error ? error : { error });
+    logger.error(
+      `❌ Failed to connect to ${dbType}`,
+      error instanceof Error ? error : { error },
+    );
     // Terminate process if DB is mandatory for startup
     process.exit(1);
   }
@@ -38,9 +43,12 @@ export const connectDB = async (): Promise<void> => {
 export const disconnectDB = async (): Promise<void> => {
   try {
     await prisma.$disconnect();
-    logger.info('🔌 Database connection closed successfully');
+    logger.info("🔌 Database connection closed successfully");
   } catch (error) {
-    logger.error('❌ Error during database disconnection', error instanceof Error ? error : { error });
+    logger.error(
+      "❌ Error during database disconnection",
+      error instanceof Error ? error : { error },
+    );
   }
 };
 

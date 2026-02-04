@@ -14,5 +14,4 @@ router.use("/contact", contactRoutes);
 router.use("/seo-settings", seoRoutes);
 router.use("/og", ogRoutes);
 
-export default router
-
+export default router;

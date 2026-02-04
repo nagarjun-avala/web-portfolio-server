@@ -15,7 +15,13 @@
     "build": "tsc && tsc-alias -p tsconfig.json --resolve-full-paths",
     "start": "node dist/index.js",
     "dev": "tsx watch index.ts",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@prisma/client": "5.22.0",
@@ -28,7 +34,7 @@
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
-    "dotenv": "^17.2.3",
+    "dotenv": "^16.4.5",
     "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
     "helmet": "^8.1.0",
@@ -40,21 +46,31 @@
     "ua-parser-js": "^2.0.8"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/apicache": "^1.6.8",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
     "@types/morgan": "^1.9.10",
     "@types/multer": "^2.0.0",
     "@types/node": "^25.0.10",
+    "@types/supertest": "^6.0.3",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.3.0",
+    "husky": "^9.1.7",
     "jest": "^30.2.0",
     "mongodb-memory-server": "^11.0.1",
     "morgan": "^1.10.1",
     "nodemon": "^3.1.11",
+    "prettier": "^3.8.1",
     "supertest": "^7.2.2",
+    "ts-jest": "^29.4.6",
     "tsc-alias": "^1.8.16",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

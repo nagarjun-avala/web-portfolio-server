@@ -11,7 +11,9 @@ const getResendClient = () => {
   if (API_KEY) {
     resend = new Resend(API_KEY);
   } else {
-    console.warn("⚠️ RESEND_API_KEY is missing. Email notifications will be disabled.");
+    console.warn(
+      "⚠️ RESEND_API_KEY is missing. Email notifications will be disabled.",
+    );
   }
   isInitialized = true;
   return resend;
@@ -28,7 +30,12 @@ interface SendContactEmailParams {
  * Sends contact form emails to both the admin and the user.
  * @param params - The contact form data.
  */
-export async function sendContactEmail({ name, email, message, ip = "" }: SendContactEmailParams): Promise<void> {
+export async function sendContactEmail({
+  name,
+  email,
+  message,
+  ip = "",
+}: SendContactEmailParams): Promise<void> {
   const client = getResendClient();
 
   // If Resend is not initialized, log a warning and return early to prevent errors
@@ -59,8 +66,8 @@ export async function sendContactEmail({ name, email, message, ip = "" }: SendCo
     console.log("Emails sent successfully.");
   } catch (error) {
     console.error("Email send error:", error);
-    // Re-throw or handle gracefully depending on requirements. 
-    // Usually, we don't want to fail the HTTP request just because the email failed, 
+    // Re-throw or handle gracefully depending on requirements.
+    // Usually, we don't want to fail the HTTP request just because the email failed,
     // but logging it is crucial.
     throw new Error("Failed to send email");
   }

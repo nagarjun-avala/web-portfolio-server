@@ -1,13 +1,13 @@
-import { config } from 'dotenv'
+import { config } from "dotenv";
 config();
 import { createServer } from "@/server";
-import logger from '@/utils/logger';
+import logger from "@/utils/logger";
 import { connectDB, disconnectDB } from "@/lib/db.js";
 
 async function main() {
   await connectDB();
 
-  const PORT = parseInt(process.env.PORT || '8080', 10);
+  const PORT = parseInt(process.env.PORT || "8080", 10);
   const app = createServer();
 
   // Start Server

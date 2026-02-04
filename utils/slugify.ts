@@ -4,12 +4,12 @@
  * @returns URL-safe slug string
  */
 export function slugify(text: string): string {
-    return text
-        .toLowerCase()
-        .trim()
-        .replace(/[^\w\s-]/g, '') // Remove special characters
-        .replace(/[\s_-]+/g, '-') // Replace spaces, underscores with single hyphen
-        .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "") // Remove special characters
+    .replace(/[\s_-]+/g, "-") // Replace spaces, underscores with single hyphen
+    .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
 }
 
 /**
@@ -18,14 +18,17 @@ export function slugify(text: string): string {
  * @param existingSlugs - Array of existing slugs to check against
  * @returns Unique slug
  */
-export function ensureUniqueSlug(baseSlug: string, existingSlugs: string[]): string {
-    let slug = baseSlug;
-    let counter = 1;
+export function ensureUniqueSlug(
+  baseSlug: string,
+  existingSlugs: string[],
+): string {
+  let slug = baseSlug;
+  let counter = 1;
 
-    while (existingSlugs.includes(slug)) {
-        slug = `${baseSlug}-${counter}`;
-        counter++;
-    }
+  while (existingSlugs.includes(slug)) {
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
 
-    return slug;
+  return slug;
 }

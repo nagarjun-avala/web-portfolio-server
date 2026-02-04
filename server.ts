@@ -26,12 +26,15 @@ export const createServer = () => {
 
   // CORS options
   const corsOptions = {
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
       // allow requests with no origin (like mobile apps, curl, or server-to-server)
       if (!origin) return callback(null, true);
 
       // Allow all in development to avoid CORS issues on network/localhost
-      if (process.env.NODE_ENV !== 'production') {
+      if (process.env.NODE_ENV !== "production") {
         return callback(null, true);
       }
 
@@ -91,7 +94,7 @@ export const createServer = () => {
   app.use("/api/upload", uploadRoutes); // Register upload routes
 
   // Serve Uploads
-  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+  app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
   // 3. Health Check
   app.get("/", (_req, res) =>

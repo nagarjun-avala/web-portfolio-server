@@ -1,30 +1,21 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
     "sourceMap": true,
     "rootDir": ".",
     "outDir": "dist",
     "baseUrl": ".",
     "strict": true,
-    "lib": [
-      "esnext"
-    ],
+    "lib": ["esnext"],
     "esModuleInterop": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "paths": {
-      "@/*": [
-        "*"
-      ]
+      "@/*": ["*"]
     },
     "skipLibCheck": true
   },
-  "include": [
-    "**/*.ts",
-    "prisma/**/*"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["**/*.ts", "prisma/**/*"],
+  "exclude": ["node_modules"]
 }

@@ -1,5 +1,5 @@
 import logger from "@/utils/logger";
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from "express";
 
 // Define a custom type that intersects Request with our custom property
 // This avoids "Interface incorrectly extends" errors if global types conflict
@@ -16,7 +16,7 @@ export default function errorCapture(
   err: HttpError,
   req: RequestWithId,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   const statusCode = err.statusCode || err.status || 500;
 
@@ -28,7 +28,7 @@ export default function errorCapture(
     error: {
       message: err.message,
       stack: err.stack,
-      name: err.name
+      name: err.name,
     },
   });
 
