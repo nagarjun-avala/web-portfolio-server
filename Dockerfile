@@ -1,28 +1,28 @@
-# Use specific version for stability (Alpine is lightweight)
-FROM node:22-alpine
-
-# Set working directory inside the container
+# Stage 1: Builder
+FROM node:22-alpine AS builder
 WORKDIR /app
-
-# Copy package.json and package-lock.json first to leverage Docker cache
 COPY package*.json ./
-
-# Install dependencies
-# Using npm ci is faster and more reliable for builds if package-lock.json exists
-# --omit=dev prevents installing devDependencies (like mongodb-memory-server) in production
-RUN npm ci --omit=dev && npm cache clean --force
-
-# Copy the rest of the application code
+COPY prisma ./prisma
+# Delete prepare script to avoid husky issues, install ALL deps for build
+RUN npm pkg delete scripts.prepare && npm ci
+# Install openssl for Prisma
+RUN apk add --no-cache openssl
 COPY . .
-
-# Generate Prisma Client
 RUN npx prisma generate
-
-# Build the TypeScript code
 RUN npm run build
 
-# Expose the port defined in index.js
+# Stage 2: Production
+FROM node:22-alpine
+WORKDIR /app
+COPY package*.json ./
+COPY prisma ./prisma
+# Install only production deps
+RUN npm pkg delete scripts.prepare && npm ci --omit=dev && npm cache clean --force
+# Install openssl for Prisma
+RUN apk add --no-cache openssl
+# Copy compiled output from builder
+COPY --from=builder /app/dist ./dist
+# Regenerate prisma client for production
+RUN npx prisma generate
 EXPOSE 5000
-
-# Start the application
 CMD ["npm", "start"]
