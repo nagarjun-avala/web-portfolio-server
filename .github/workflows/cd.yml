@@ -9,17 +9,6 @@ jobs:
   build-image:
     runs-on: ubuntu-latest
     steps:
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: true
-
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -53,7 +42,13 @@ jobs:
             docker stop backend || true
             docker rm backend || true
 
-            # 2. Pull the fresh image (Just built in the previous job)
+            # 2. Free up space (Critical: "No space left on device" fix)
+            # Remove the old image explicitly to free space for the new pull
+            docker rmi ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:latest || true
+            # Prune dangling images and stopped containers
+            docker system prune -f
+
+            # 3. Pull the fresh image (Just built in the previous job)
             docker pull ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:latest
 
             # 3. Start the new container
