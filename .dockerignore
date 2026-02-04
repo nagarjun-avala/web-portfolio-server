@@ -12,3 +12,4 @@ seed.json
 .env.local
 .env.example
 prisma/seed.ts
+uploads
