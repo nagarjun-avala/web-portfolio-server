@@ -1,5 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
-
+import { Request, Response, NextFunction } from "express";
 
 const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
   const apiKey = req.headers["x-api-key"];

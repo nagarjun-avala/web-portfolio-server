@@ -5,12 +5,12 @@ on:
     branches: ["development"]
 
 jobs:
-  build:
+  ci-checks:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [22.x]
+        node-version: [20.x, 22.x]
 
     steps:
       - name: Checkout Code
@@ -25,5 +25,14 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      # - name: Run Tests
-      #   run: npm test
+      - name: Check Formatting
+        run: npm run format:check
+
+      - name: Lint Code
+        run: npm run lint
+
+      - name: Type Check
+        run: npm run build
+
+      - name: Run Tests
+        run: npm test

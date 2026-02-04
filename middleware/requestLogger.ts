@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import { UAParser } from 'ua-parser-js';
-import logger, { LogLevel, LogMeta } from '@/utils/logger';
+import { Request, Response, NextFunction } from "express";
+import { UAParser } from "ua-parser-js";
+import logger, { LogLevel, LogMeta } from "@/utils/logger";
 
 // Extend Express Request interface to include custom properties
 declare global {
@@ -21,11 +21,18 @@ const isProd = process.env.NODE_ENV === "production";
 // Configuration for enterprise standards
 const SLOW_REQUEST_MS = 500;
 const SKIP_PATHS = ["/health", "/favicon.ico"];
-const SENSITIVE_FIELDS = ["password", "token", "accessToken", "refreshToken", "cvv", "secret"];
+const SENSITIVE_FIELDS = [
+  "password",
+  "token",
+  "accessToken",
+  "refreshToken",
+  "cvv",
+  "secret",
+];
 
 /**
  * Redacts sensitive fields from objects to prevent accidental PII leakage in logs.
- * Note: The base logger also performs sanitization, but we do it here for 
+ * Note: The base logger also performs sanitization, but we do it here for
  * request-specific clarity before the data leaves the middleware.
  */
 function sanitize(obj: any): any {
@@ -49,7 +56,7 @@ function sanitize(obj: any): any {
  */
 function anonymizeIP(ip?: string): string {
   if (!ip) return "unknown";
-  if (ip.includes(':')) return ip.split(':').slice(0, 3).join(':') + '::xxx'; // IPv6
+  if (ip.includes(":")) return ip.split(":").slice(0, 3).join(":") + "::xxx"; // IPv6
   return ip.replace(/\d+\.\d+$/, "xxx.xxx"); // IPv4
 }
 
@@ -57,7 +64,8 @@ function anonymizeIP(ip?: string): string {
  * Detection for common bot/crawler User Agents.
  */
 function isBotUA(ua: string = ""): boolean {
-  const botRegex = /bot|crawl|spider|slurp|postman|curl|wget|axios|node-fetch|python|headless|puppeteer/i;
+  const botRegex =
+    /bot|crawl|spider|slurp|postman|curl|wget|axios|node-fetch|python|headless|puppeteer/i;
   return botRegex.test(ua);
 }
 
@@ -80,13 +88,18 @@ function statusColor(code: number): string {
 /**
  * Enterprise Request Logger Middleware (TypeScript)
  */
-export default function requestLogger(req: Request, res: Response, next: NextFunction): void {
+export default function requestLogger(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void {
   if (SKIP_PATHS.includes(req.path)) return next();
 
   const start = process.hrtime.bigint();
 
   // 1. Correlation/Request ID Tracking
-  const requestId = (req.headers["x-request-id"] as string) || logger.generateRequestId();
+  const requestId =
+    (req.headers["x-request-id"] as string) || logger.generateRequestId();
   req.requestId = requestId;
   res.setHeader("x-request-id", requestId);
 
@@ -100,7 +113,7 @@ export default function requestLogger(req: Request, res: Response, next: NextFun
       ...meta,
       requestId,
       path: req.originalUrl,
-      method: req.method
+      method: req.method,
     });
   };
 
@@ -111,7 +124,8 @@ export default function requestLogger(req: Request, res: Response, next: NextFun
     // Determine log level based on status and performance
     let level: LogLevel = "info";
     if (res.statusCode >= 500) level = "error";
-    else if (res.statusCode >= 400 || duration > SLOW_REQUEST_MS) level = "warn";
+    else if (res.statusCode >= 400 || duration > SLOW_REQUEST_MS)
+      level = "warn";
     else if (res.statusCode >= 200 && res.statusCode < 300) level = "success";
 
     // Prepare metadata for structured logging (Production)
@@ -128,12 +142,13 @@ export default function requestLogger(req: Request, res: Response, next: NextFun
       device: ua.device.type || "desktop",
       isBot: isBotUA(req.headers["user-agent"]),
       query: sanitize(req.query),
-      body: req.method !== 'GET' ? sanitize(req.body) : undefined,
+      body: req.method !== "GET" ? sanitize(req.body) : undefined,
     };
 
     // Construct readable message for Development
     const color = statusColor(res.statusCode);
-    const readableMsg = `${colors.cyan}${req.method}${colors.reset} ${req.originalUrl} ` +
+    const readableMsg =
+      `${colors.cyan}${req.method}${colors.reset} ${req.originalUrl} ` +
       `${color}${res.statusCode}${colors.reset} ` +
       `${colors.dim}${durationFixed}ms${colors.reset} ` +
       `[${ua.browser.name || "?"} on ${ua.os.name || "?"}]` +

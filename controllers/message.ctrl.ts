@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import { db } from '@/lib/db';
+import { Request, Response } from "express";
+import { db } from "@/lib/db";
 
 const MessageController = {
   getMessages: async (req: Request, res: Response) => {
@@ -12,26 +12,26 @@ const MessageController = {
 
       const whereClause: any = {};
 
-      if (status === 'read') whereClause.isRead = true;
-      if (status === 'unread') whereClause.isRead = false;
+      if (status === "read") whereClause.isRead = true;
+      if (status === "unread") whereClause.isRead = false;
 
       if (search) {
         whereClause.OR = [
-          { name: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
-          { message: { contains: search, mode: 'insensitive' } }
+          { name: { contains: search, mode: "insensitive" } },
+          { email: { contains: search, mode: "insensitive" } },
+          { message: { contains: search, mode: "insensitive" } },
         ];
       }
 
       const [messages, total, unreadCount] = await Promise.all([
         db.message.findMany({
           where: whereClause,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           skip,
-          take: limit
+          take: limit,
         }),
         db.message.count({ where: whereClause }),
-        db.message.count({ where: { isRead: false } })
+        db.message.count({ where: { isRead: false } }),
       ]);
 
       res.json({
@@ -40,13 +40,15 @@ const MessageController = {
         pagination: {
           total,
           page,
-          pages: Math.ceil(total / limit)
+          pages: Math.ceil(total / limit),
         },
-        unreadCount
+        unreadCount,
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ success: false, message: "Error fetching messages" });
+      res
+        .status(500)
+        .json({ success: false, message: "Error fetching messages" });
     }
   },
 
@@ -57,19 +59,23 @@ const MessageController = {
 
       const { isRead } = req.body;
 
-      if (typeof isRead !== 'boolean') {
-        return res.status(400).json({ success: false, message: "Invalid status" });
+      if (typeof isRead !== "boolean") {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid status" });
       }
 
       const updated = await db.message.update({
         where: { id: messageId },
-        data: { isRead }
+        data: { isRead },
       });
 
       res.json({ success: true, data: updated });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ success: false, message: "Error updating status" });
+      res
+        .status(500)
+        .json({ success: false, message: "Error updating status" });
     }
   },
 
@@ -77,17 +83,21 @@ const MessageController = {
     try {
       const { ids } = req.body;
       if (!Array.isArray(ids) || ids.length === 0) {
-        return res.status(400).json({ success: false, message: "No IDs provided" });
+        return res
+          .status(400)
+          .json({ success: false, message: "No IDs provided" });
       }
 
       await db.message.deleteMany({
-        where: { id: { in: ids } }
+        where: { id: { in: ids } },
       });
 
       res.json({ success: true, message: `Deleted ${ids.length} messages` });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ success: false, message: "Error deleting messages" });
+      res
+        .status(500)
+        .json({ success: false, message: "Error deleting messages" });
     }
   },
 
@@ -95,21 +105,27 @@ const MessageController = {
     try {
       const { ids, isRead } = req.body;
       if (!Array.isArray(ids) || ids.length === 0) {
-        return res.status(400).json({ success: false, message: "No IDs provided" });
+        return res
+          .status(400)
+          .json({ success: false, message: "No IDs provided" });
       }
-      if (typeof isRead !== 'boolean') {
-        return res.status(400).json({ success: false, message: "Invalid status" });
+      if (typeof isRead !== "boolean") {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid status" });
       }
 
       await db.message.updateMany({
         where: { id: { in: ids } },
-        data: { isRead }
+        data: { isRead },
       });
 
       res.json({ success: true, message: `Updated ${ids.length} messages` });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ success: false, message: "Error updating status" });
+      res
+        .status(500)
+        .json({ success: false, message: "Error updating status" });
     }
   },
 
@@ -123,15 +139,17 @@ const MessageController = {
       }
 
       await db.message.delete({
-        where: { id: messageId }
+        where: { id: messageId },
       });
 
       res.json({ success: true, message: "Message deleted" });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ success: false, message: "Error deleting message" });
+      res
+        .status(500)
+        .json({ success: false, message: "Error deleting message" });
     }
   },
 };
 
-export default MessageController
+export default MessageController;

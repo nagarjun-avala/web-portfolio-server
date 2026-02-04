@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import { db } from '@/lib/db';
+import { Request, Response } from "express";
+import { db } from "@/lib/db";
 import { sendContactEmail } from "@/lib/email";
 
 const ContactController = {
@@ -8,15 +8,17 @@ const ContactController = {
       const { name, email, message } = req.body;
 
       if (!name || !email || !message) {
-        return res.status(400).json({ success: false, message: "All fields are required" });
+        return res
+          .status(400)
+          .json({ success: false, message: "All fields are required" });
       }
 
       await db.message.create({
         data: {
           name,
           email,
-          message
-        }
+          message,
+        },
       });
 
       // Attempt to send email, but don't fail the request if it fails
@@ -34,4 +36,4 @@ const ContactController = {
   },
 };
 
-export default ContactController
+export default ContactController;

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import seoCtrl from "@/controllers/seo.ctrl";
 import asyncHandler from "@/utils/asyncHandler";
-import { requireAdmin } from '@/middleware/admin';
+import { verifyToken } from "@/middleware/auth";
 
 const router = Router();
 
@@ -9,9 +9,9 @@ const router = Router();
 router.get("/", asyncHandler(seoCtrl.getSeoSettings));
 
 // PATCH /api/seo-settings (Update SEO settings)
-router.patch("/", requireAdmin, asyncHandler(seoCtrl.updateSeoSettings));
+router.patch("/", verifyToken, asyncHandler(seoCtrl.updateSeoSettings));
 
 // POST /api/seo-settings/reset (Reset to defaults)
-router.post("/reset", requireAdmin, asyncHandler(seoCtrl.resetSeoSettings));
+router.post("/reset", verifyToken, asyncHandler(seoCtrl.resetSeoSettings));
 
 export default router;

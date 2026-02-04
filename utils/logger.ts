@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import pkg from "@/package.json" with { type: "json" };
+import pkg from "@/package.json";
 const { name, version } = pkg;
 
 /**
@@ -19,10 +19,21 @@ const ENV = process.env.NODE_ENV || "development";
 const IS_PROD = ENV === "production";
 const THEME = (process.env.LOG_THEME as "dark" | "light") || "dark";
 const USE_EMOJI = process.env.LOG_EMOJI === "true";
-const SENSITIVE_FIELDS = ["password", "token", "accesstoken", "refreshtoken", "secret", "cvv", "key", "authorization"];
+const SENSITIVE_FIELDS = [
+  "password",
+  "token",
+  "accesstoken",
+  "refreshtoken",
+  "secret",
+  "cvv",
+  "key",
+  "authorization",
+];
 
 // Color support detection
-const SUPPORTS_COLOR = process.env.FORCE_COLOR === "1" || (process.stdout.isTTY === true && process.env.TERM !== "dumb");
+const SUPPORTS_COLOR =
+  process.env.FORCE_COLOR === "1" ||
+  (process.stdout.isTTY === true && process.env.TERM !== "dumb");
 
 const THEMES = {
   dark: {
@@ -43,15 +54,31 @@ const THEMES = {
 
 const COLORS = SUPPORTS_COLOR
   ? { ...THEMES[THEME], RESET: "\x1b[0m", DIM: "\x1b[2m" }
-  : { INFO: "", DEBUG: "", WARN: "", ERROR: "", SUCCESS: "", RESET: "", DIM: "" };
+  : {
+    INFO: "",
+    DEBUG: "",
+    WARN: "",
+    ERROR: "",
+    SUCCESS: "",
+    RESET: "",
+    DIM: "",
+  };
 
 const EMOJI = USE_EMOJI
   ? { INFO: "ℹ️", DEBUG: "🐞", WARN: "⚠️", ERROR: "❌", SUCCESS: "✅" }
   : { INFO: "", DEBUG: "", WARN: "", ERROR: "", SUCCESS: "" };
 
-const LEVELS: Record<LogLevel, number> = { error: 0, warn: 1, info: 2, debug: 3, success: 4 };
+const LEVELS: Record<LogLevel, number> = {
+  error: 0,
+  warn: 1,
+  info: 2,
+  success: 2,
+  debug: 3,
+};
 const LOG_LEVEL_ENV = process.env.LOG_LEVEL as LogLevel | undefined;
-const CURRENT_LEVEL = (LOG_LEVEL_ENV && LEVELS[LOG_LEVEL_ENV]) ?? (IS_PROD ? LEVELS.info : LEVELS.debug);
+const CURRENT_LEVEL =
+  (LOG_LEVEL_ENV && LEVELS[LOG_LEVEL_ENV]) ??
+  (IS_PROD ? LEVELS.info : LEVELS.debug);
 
 /**
  * Recursive sanitizer to redact sensitive PII/Secrets at any depth
@@ -114,7 +141,9 @@ function format(level: LogLevel, message: string, meta?: LogMeta): string {
 
   const upper = level.toUpperCase() as keyof typeof COLORS;
   const color = COLORS[upper] || "";
-  const emojiPrefix = EMOJI[upper as keyof typeof EMOJI] ? `${EMOJI[upper as keyof typeof EMOJI]} ` : "";
+  const emojiPrefix = EMOJI[upper as keyof typeof EMOJI]
+    ? `${EMOJI[upper as keyof typeof EMOJI]} `
+    : "";
 
   let output = `${color}${emojiPrefix}[${name}@${version}][${upper}]${COLORS.DIM}[${timestamp}]${COLORS.RESET} ${message}`;
 

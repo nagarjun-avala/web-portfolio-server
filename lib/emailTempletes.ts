@@ -1,13 +1,13 @@
 interface UserAcknowledgeProps {
-    name: string;
-    designation?: string;
+  name: string;
+  designation?: string;
 }
 
 export const UserAcknowledge = ({
-    name,
-    designation = "Digital Designer & Developer",
+  name,
+  designation = "Digital Designer & Developer",
 }: UserAcknowledgeProps): string => {
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -124,21 +124,21 @@ export const UserAcknowledge = ({
 };
 
 interface AdminAcknowledgeProps {
-    name: string;
-    email: string;
-    subject?: string;
-    message: string;
-    ip?: string;
+  name: string;
+  email: string;
+  subject?: string;
+  message: string;
+  ip?: string;
 }
 
 export const AdminAcknowledge = ({
-    name,
-    email,
-    subject = "",
-    message,
-    ip = "",
+  name,
+  email,
+  subject = "",
+  message,
+  ip = "",
 }: AdminAcknowledgeProps): string => {
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -226,26 +226,26 @@ export const AdminAcknowledge = ({
                                                 </td>
                                             </tr>
                                         </table>
-                                        ${subject &&
-            subject !== ""
-            ? `<!-- Row 2: Subject -->
+                                        ${
+                                          subject && subject !== ""
+                                            ? `<!-- Row 2: Subject -->
                                         <div style="margin-bottom: 24px;">
                                             <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8;">Subject</p>
                                             <p style="margin: 0; font-size: 15px; font-weight: 500; color: #1e293b;">${subject}</p>
                                         </div>`
-            : ""
-        }
+                                            : ""
+                                        }
 
-                                        ${ip &&
-            ip !== ""
-            ? `
+                                        ${
+                                          ip && ip !== ""
+                                            ? `
                                         <!-- Row 3: IP Address (Conditional) -->
                                         <div style="margin-bottom: 24px;">
                                             <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8;">IP Address</p>
                                             <p style="margin: 0; font-size: 15px; font-weight: 500; color: #1e293b;">${ip}</p>
                                         </div>`
-            : ""
-        }
+                                            : ""
+                                        }
 
                                         <!-- Row 3: Message -->
                                         <div>

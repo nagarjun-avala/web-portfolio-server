@@ -60,6 +60,8 @@ model Hero {
   ctaSecondaryText String?
   ctaSecondaryLink String?
 
+  avatar String? // Synced from Profile.avatar
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -71,6 +73,7 @@ model About {
   title           String?
   description     String?
   image           String?
+  profileImageUrl String? // New field for profile image URL
   experienceYears String? // e.g., "2+"
   experienceLabel String? // e.g., "Years of Experience"
   skills          String[]
