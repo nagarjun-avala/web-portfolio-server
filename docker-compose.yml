@@ -10,7 +10,7 @@ services:
     environment:
       - PORT=${PORT}
       # Connect to the 'mongo' service defined below
-      - MONGO_URI=${MONGO_URI}
+      - DATABASE_URL=${DATABASE_URL}
       # Pass through other secrets (or use an .env file)
       - ADMIN_API_KEY=${ADMIN_API_KEY}
       - RESEND_API_KEY=${RESEND_API_KEY}
