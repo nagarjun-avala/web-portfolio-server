@@ -1,6 +1,6 @@
 import crypto from "crypto";
-import pkg from "@/package.json" with { type: "json" };
-const { name, version } = pkg;
+
+const name = "server";
 
 /**
  * Enterprise Standards & Type Definitions
@@ -133,7 +133,6 @@ function format(level: LogLevel, message: string, meta?: LogMeta): string {
       message,
       meta: sanitizedMeta,
       service: name,
-      version,
       env: ENV,
       timestamp,
     });
@@ -145,7 +144,7 @@ function format(level: LogLevel, message: string, meta?: LogMeta): string {
     ? `${EMOJI[upper as keyof typeof EMOJI]} `
     : "";
 
-  let output = `${color}${emojiPrefix}[${name}@${version}][${upper}]${COLORS.DIM}[${timestamp}]${COLORS.RESET} ${message}`;
+  let output = `${color}${emojiPrefix}[${name}][${upper}]${COLORS.DIM}[${timestamp}]${COLORS.RESET} ${message}`;
 
   if (sanitizedMeta && Object.keys(sanitizedMeta).length > 0) {
     output += ` ${COLORS.DIM}${safeStringify(sanitizedMeta)}${COLORS.RESET}`;

@@ -77,6 +77,9 @@ export const createServer = () => {
     );
   }
 
+  // Serve Uploads
+  app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
   // Rate Limiting (Basic DDoS protection)
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -92,9 +95,6 @@ export const createServer = () => {
   app.use("/api", routes);
   app.use("/api/auth", authRoutes); // Register auth routes
   app.use("/api/upload", uploadRoutes); // Register upload routes
-
-  // Serve Uploads
-  app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
   // 3. Health Check
   app.get("/", (_req, res) =>
