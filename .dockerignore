@@ -7,3 +7,8 @@ Dockerfile
 coverage
 .idea
 dist
+seed.json
+.gitignore
+.env.local
+.env.example
+prisma/seed.ts
