@@ -1,9 +1,9 @@
-node_modules;
-npm - debug.log;
-Dockerfile;
-.git;
-.env;
-.DS_Store;
-coverage;
-coverage;
+node_modules
+npm-debug.log
+Dockerfile
+.git
+.env
+.DS_Store
+coverage
 .idea
+dist
