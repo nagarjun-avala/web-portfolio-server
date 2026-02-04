@@ -1,5 +1,6 @@
 import crypto from "crypto";
-import { name, version } from "@/package.json" with { type: "json" };
+import pkg from "@/package.json" with { type: "json" };
+const { name, version } = pkg;
 
 /**
  * Enterprise Standards & Type Definitions
