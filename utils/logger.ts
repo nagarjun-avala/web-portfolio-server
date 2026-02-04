@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import pkg from "@/package.json";
+import pkg from "@/package.json" with { type: "json" };
 const { name, version } = pkg;
 
 /**

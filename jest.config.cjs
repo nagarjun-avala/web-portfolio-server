@@ -11,5 +11,6 @@ module.exports = {
             useESM: true,
         }],
     },
+    extensionsToTreatAsEsm: ['.ts'],
     modulePathIgnorePatterns: ["<rootDir>/dist/"],
 };
