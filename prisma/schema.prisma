@@ -1,0 +1,716 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------
+// Profile & Personal Branding
+// ---------------------------------------------------------
+
+type Social {
+  platform String
+  url      String
+  icon     String?
+}
+
+model Profile {
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  name    String   @default("Nagarjun Avala")
+  // Meta Details
+  title   String? // e.g., "Nagarjun Avala | Full Stack Developer"
+  email   String   @unique
+  phone   String?
+  // Relation Fields (files)
+  avatar  String? // URL to uploaded image
+  resume  String? // URL to uploaded PDF
+  socials Social[]
+
+  // Theme Settings
+  themeColor   String @default("blue")
+  fontPairing  String @default("inter")
+  borderRadius String @default("md")
+
+  // Relations
+  hero      Hero?
+  about     About?
+  techStack TechStackItem[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+model Hero {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  profileId   String   @unique @db.ObjectId
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  badge       String? // e.g., "Open to Work & Collaborations"
+  roles       String[] // MongoDB supports native arrays
+  titlePrefix String?
+  titleSuffix String?
+  description String?
+
+  // CTA 1
+  ctaPrimaryText String?
+  ctaPrimaryLink String?
+
+  // CTA 2
+  ctaSecondaryText String?
+  ctaSecondaryLink String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model About {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  profileId       String   @unique @db.ObjectId
+  profile         Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title           String?
+  description     String?
+  image           String?
+  experienceYears String? // e.g., "2+"
+  experienceLabel String? // e.g., "Years of Experience"
+  skills          String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model TechStackItem {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  profileId String   @db.ObjectId
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  category  String // e.g., "Languages", "Frontend", "Backend"
+  items     String[] // e.g., ["JavaScript", "TypeScript", "C++"]
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+}
+
+// ---------------------------------------------------------
+// Enums (Consolidated)
+// ---------------------------------------------------------
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  IN_PROGRESS // From ProjectStatus
+  SCHEDULED // From BlogStatus
+}
+
+// ---------------------------------------------------------
+// Professional Collections
+// ---------------------------------------------------------
+
+enum TeamSize {
+  SOLO
+  SMALL // 2-5
+  MEDIUM // 5-10
+  LARGE // 10+
+}
+
+enum BudgetRange {
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+enum ProjectType {
+  PERSONAL
+  CLIENT
+  OPEN_SOURCE
+  CONTRACT
+}
+
+enum CompletionStatus {
+  COMPLETED
+  ONGOING
+  MAINTENANCE
+}
+
+enum ProjectScale {
+  SMALL
+  MEDIUM
+  LARGE
+  ENTERPRISE
+}
+
+type DemoCredentials {
+  username String
+  password String
+}
+
+type Collaborator {
+  name   String
+  url    String
+  avatar String?
+}
+
+model Project {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  order       Int     @default(0)
+  slug        String  @unique
+  title       String
+  description String? @map("desc")
+
+  // Phase 1: Essential Features
+  // Featured/Pinned
+  featured      Boolean @default(false)
+  featuredOrder Int?
+
+  // Status & Visibility
+  status      ContentStatus @default(DRAFT)
+  visibility  Visibility    @default(PUBLIC)
+  publishDate DateTime?
+
+  // Media Management
+  imageUrl           String?  @map("img")
+  videoUrl           String?
+  gallery            String[] @default([])
+  beforeImage        String?
+  afterImage         String?
+  featuredImageIndex Int?     @default(0)
+
+  // Project Metadata
+  startDate        DateTime?
+  endDate          DateTime?
+  teamSize         TeamSize?
+  budgetRange      BudgetRange?
+  projectType      ProjectType?
+  completionStatus CompletionStatus?
+
+  // Legacy/Basic Fields
+  tags      String[] @default([])
+  liveLink  String?
+  client    String?
+  role      String?
+  year      String?
+  challenge String?
+  solution  String?
+
+  // Phase 2: Enhanced Features
+  // Case Study Fields
+  results     String?
+  testimonial String?
+  learnings   String?
+
+  // SEO Fields
+  metaDescription String?
+  ogImage         String?
+  keywords        String[] @default([])
+
+  // Categorization (enhanced)
+  category     String?       @map("cat") // Kept for backward compatibility
+  categories   String[]      @default([])
+  industryTags String[]      @default([])
+  projectScale ProjectScale?
+  platform     String[]      @default([])
+
+  // External Links
+  githubUrl       String?
+  apiDocsUrl      String?
+  packageUrl      String?
+  figmaUrl        String?
+  demoCredentials DemoCredentials?
+
+  // Phase 3: Advanced Features
+  // Analytics
+  viewCount       Int       @default(0)
+  clickCount      Int       @default(0)
+  popularityScore Float     @default(0)
+  lastViewedAt    DateTime?
+
+  // Collaboration
+  collaborators          Collaborator[]
+  specificRole           String?
+  contributionPercentage Int?
+  agency                 String?
+
+  // Project Relationships
+  relatedProjectIds String[] @default([])
+  partOfSeriesId    String?
+  builtUponId       String?
+
+  // Back-relations
+  relatedInExperiences   Experience[] @relation(fields: [relatedInExperienceIds], references: [id])
+  relatedInExperienceIds String[]     @default([]) @db.ObjectId
+
+  relatedInEducations   Education[] @relation(fields: [relatedInEducationIds], references: [id])
+  relatedInEducationIds String[]    @default([]) @db.ObjectId
+
+  relatedInCertifications   Certification[] @relation(fields: [relatedInCertificationIds], references: [id])
+  relatedInCertificationIds String[]        @default([]) @db.ObjectId
+
+  relatedInBlogs   Blog[]   @relation(fields: [relatedInBlogIds], references: [id])
+  relatedInBlogIds String[] @default([]) @db.ObjectId
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([visibility])
+  @@index([featured])
+  @@index([category])
+  @@index([publishDate])
+}
+
+enum DegreeType {
+  BACHELORS
+  MASTERS
+  PHD
+  CERTIFICATION
+  BOOTCAMP
+  DIPLOMA
+  ASSOCIATE
+}
+
+enum EducationProgress {
+  COMPLETED
+  IN_PROGRESS
+  PAUSED
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  FREELANCE
+  INTERNSHIP
+}
+
+enum LocationType {
+  ONSITE
+  REMOTE
+  HYBRID
+}
+
+type Testimonial {
+  text     String
+  author   String
+  position String
+  avatar   String?
+}
+
+type Thesis {
+  title       String
+  description String?
+  link        String?
+}
+
+model Experience {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  order Int    @default(0)
+
+  // Basic Role Information
+  start       DateTime?
+  end         DateTime?
+  role        String?
+  company     String?
+  description String?   @map("desc")
+
+  // Company Information
+  companyLogo    String?
+  companyWebsite String?
+  companySize    String?
+  location       String?
+  locationType   LocationType?
+
+  // Role Details
+  employmentType   EmploymentType?
+  currentlyWorking Boolean         @default(false)
+  duration         String?
+
+  // Description & Content
+  responsibilities String[] @default([])
+  achievements     String[] @default([])
+  impact           String?
+  technologies     String[] @default([])
+  skillsAcquired   String[] @default([])
+
+  // Status & Visibility
+  status        ContentStatus @default(DRAFT)
+  visibility    Visibility    @default(PUBLIC)
+  featured      Boolean       @default(false)
+  featuredOrder Int?
+
+  // Media & Links
+  media                String[]     @default([])
+  certificateUrl       String?
+  recommendationLetter String?
+  testimonial          Testimonial?
+
+  // Metadata
+  relatedProjectIds String[]  @default([]) @db.ObjectId
+  relatedProjects   Project[] @relation(fields: [relatedProjectIds], references: [id])
+  teamSize          String?
+  reportsTo         String?
+  managedTeamSize   Int?
+
+  // SEO
+  keywords String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Experience needs back-relation for Certifications?
+  relatedInCertifications   Certification[] @relation(fields: [relatedInCertificationIds], references: [id])
+  relatedInCertificationIds String[]        @default([]) @db.ObjectId
+
+  @@index([company])
+  @@index([status])
+  @@index([featured])
+  @@index([employmentType])
+}
+
+model Education {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  order Int    @default(0)
+
+  // Core Fields
+  degree       String
+  institution  String
+  location     String?
+  fieldOfStudy String?
+
+  // Dates
+  startDate         DateTime?
+  endDate           DateTime?
+  currentlyPursuing Boolean   @default(false)
+
+  // Institution Details
+  institutionLogo    String?
+  institutionWebsite String?
+  degreeType         DegreeType?
+
+  // Academic Details
+  gpa         String?
+  showGpa     Boolean @default(false)
+  description String?
+
+  // Content Arrays
+  coursework     String[] @default([])
+  highlights     String[] @default([])
+  awards         String[] @default([])
+  activities     String[] @default([])
+  skillsAcquired String[] @default([])
+
+  // Thesis/Capstone Project
+  thesis Thesis?
+
+  // Status & Visibility
+  status        ContentStatus      @default(PUBLISHED)
+  visibility    Visibility         @default(PUBLIC)
+  featured      Boolean            @default(false)
+  featuredOrder Int?
+  progress      EducationProgress?
+
+  // Relationships
+  relatedProjectIds String[]  @default([]) @db.ObjectId
+  relatedProjects   Project[] @relation(fields: [relatedProjectIds], references: [id])
+
+  // SEO
+  keywords String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([featured])
+  @@index([degreeType])
+}
+
+enum CertificationCategory {
+  TECHNICAL
+  PROFESSIONAL
+  ACADEMIC
+  LANGUAGE
+  OTHER
+}
+
+enum CertificationLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+model Certification {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  order Int    @default(0)
+
+  // Core Fields
+  name         String?
+  organization String?
+  description  String?
+
+  // Dates
+  issueDate      DateTime?
+  expirationDate DateTime?
+
+  // Credentials & Verification
+  credentialID     String?
+  credentialURL    String?
+  verificationLink String?
+
+  // Categorization
+  category CertificationCategory?
+  level    CertificationLevel?
+  tags     String[]               @default([])
+
+  // Skills & Performance
+  skillsGained String[] @default([])
+  score        String?
+  grade        String?
+
+  // Media & Assets
+  badgeImage       String?
+  certificateImage String?
+  certificatePdf   String?
+
+  // Professional Details
+  ceUnits         Float?
+  requiresRenewal Boolean @default(false)
+
+  // Status & Visibility
+  status        ContentStatus @default(PUBLISHED)
+  visibility    Visibility    @default(PUBLIC)
+  featured      Boolean       @default(false)
+  featuredOrder Int?
+
+  // Relationships
+  relatedProjectIds    String[]     @default([]) @db.ObjectId
+  relatedProjects      Project[]    @relation(fields: [relatedProjectIds], references: [id])
+  relatedExperienceIds String[]     @default([]) @db.ObjectId
+  relatedExperiences   Experience[] @relation(fields: [relatedExperienceIds], references: [id])
+
+  // SEO
+  keywords String[] @default([])
+
+  // Legacy fields
+  title  String?
+  issuer String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([category])
+  @@index([featured])
+  @@index([expirationDate])
+}
+
+// ---------------------------------------------------------
+// Content & Communication
+// ---------------------------------------------------------
+
+model Blog {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  order Int    @default(0)
+
+  // Core Content
+  title   String
+  slug    String  @unique
+  excerpt String?
+  content String?
+
+  // Publishing & Status
+  status       ContentStatus @default(DRAFT)
+  visibility   Visibility    @default(PUBLIC)
+  publishedAt  DateTime?
+  scheduledFor DateTime?
+
+  // Media
+  coverImage String?
+  ogImage    String?
+  gallery    String[] @default([])
+
+  // Categorization
+  category    String?
+  tags        String[] @default([])
+  series      String?
+  seriesOrder Int?
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  keywords        String[] @default([])
+
+  // Features & Settings
+  featured         Boolean @default(false)
+  featuredOrder    Int?
+  enableComments   Boolean @default(true)
+  showInNewsletter Boolean @default(false)
+
+  // Analytics
+  viewCount   Int  @default(0)
+  readingTime Int?
+
+  // Relationships
+  relatedBlogIds    String[]  @default([])
+  relatedProjectIds String[]  @default([]) @db.ObjectId
+  relatedProjects   Project[] @relation(fields: [relatedProjectIds], references: [id])
+
+  // Legacy fields
+  date     String?
+  readTime String?
+  link     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([featured])
+  @@index([category])
+  @@index([publishedAt])
+}
+
+model Message {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String
+  message   String
+  isRead    Boolean  @default(false) @map("read")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([isRead])
+}
+
+// ---------------------------------------------------------
+// Global SEO Settings
+// ---------------------------------------------------------
+
+enum RobotsDirective {
+  INDEX_FOLLOW
+  INDEX_NOFOLLOW
+  NOINDEX_FOLLOW
+  NOINDEX_NOFOLLOW
+}
+
+enum TwitterCardType {
+  SUMMARY
+  SUMMARY_LARGE_IMAGE
+  APP
+  PLAYER
+}
+
+enum SitemapFrequency {
+  ALWAYS
+  HOURLY
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+  NEVER
+}
+
+enum MaxImagePreview {
+  NONE
+  STANDARD
+  LARGE
+}
+
+model Admin {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String   @unique
+  password  String // Hashed password
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SeoSettings {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  // Meta Information
+  defaultMetaTitle       String?
+  metaTitleTemplate      String? // e.g., "{Page Title} | {Site Name}"
+  defaultMetaDescription String?
+  siteName               String?
+  defaultKeywords        String[] @default([])
+  authorName             String?
+  canonicalUrlBase       String?
+
+  // Social Media / Open Graph
+  ogImageDefault     String?
+  ogType             String?          @default("website")
+  twitterCardType    TwitterCardType? @default(SUMMARY_LARGE_IMAGE)
+  twitterHandle      String?
+  facebookAppId      String?
+  linkedinProfileUrl String?
+
+  // Structured Data (Schema.org)
+  enablePersonSchema              Boolean  @default(true)
+  enableProfessionalServiceSchema Boolean  @default(false)
+  organizationName                String?
+  jobTitle                        String?
+  skillsList                      String[] @default([])
+  sameAsLinks                     String[] @default([]) // Social profile URLs
+
+  // Analytics & Tracking
+  googleAnalyticsId  String?
+  googleTagManagerId String?
+  facebookPixelId    String?
+  linkedinInsightTag String?
+  hotjarSiteId       String?
+  plausibleDomain    String?
+
+  // Search Engine Settings
+  enableSearchEngineIndexing      Boolean          @default(true)
+  googleSearchConsoleVerification String?
+  bingWebmasterVerification       String?
+  robotsMetaDefault               RobotsDirective? @default(INDEX_FOLLOW)
+  maxSnippetLength                Int?
+  maxImagePreview                 MaxImagePreview? @default(LARGE)
+
+  // Technical SEO
+  sitemapAutoGeneration   Boolean           @default(true)
+  sitemapUpdateFrequency  SitemapFrequency? @default(WEEKLY)
+  customRobotsTxtRules    String?
+  preferredDomain         String? // www vs non-www
+  forceHttps              Boolean           @default(true)
+  trailingSlashPreference Boolean           @default(false) // true = with slash, false = without
+
+  // Performance & Optimization
+  enableLazyLoading     Boolean  @default(true)
+  imageQualityDefault   Int?     @default(85)
+  enableWebpConversion  Boolean  @default(true)
+  preloadCriticalAssets String[] @default([])
+  dnsPrefetchDomains    String[] @default([])
+
+  // Local SEO (Optional)
+  businessLocation String?
+  serviceAreas     String[] @default([])
+  businessHours    String?
+  contactPhone     String?
+  businessAddress  String?
+
+  // Content Defaults
+  defaultLanguage   String? @default("en")
+  enableReadingTime Boolean @default(true)
+  enableBreadcrumbs Boolean @default(true)
+  breadcrumbSchema  Boolean @default(true)
+
+  // Advanced
+  customHeadInjection   String?
+  customFooterScripts   String?
+  alternateLanguageTags Json? // Array of { lang: string, url: string }
+  ampSupport            Boolean @default(false)
+  rssFeedEnabled        Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("SeoSettings")
+}

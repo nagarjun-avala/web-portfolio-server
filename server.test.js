@@ -1,7 +1,7 @@
-const request = require("supertest");
-const mongoose = require("mongoose");
-const { MongoMemoryServer } = require("mongodb-memory-server");
-const { createServer } = require("./server");
+import request from "supertest";
+import { disconnect, connect, connection } from "mongoose";
+import { MongoMemoryServer } from "mongodb-memory-server";
+import { createServer } from "./server.js";
 
 const app = createServer();
 
@@ -17,16 +17,16 @@ beforeAll(async () => {
   const uri = mongoServer.getUri();
 
   // 2. Connect Mongoose to this temporary URI
-  await mongoose.disconnect(); // Ensure any old connection is closed
-  await mongoose.connect(uri);
+  await disconnect(); // Ensure any old connection is closed
+  await connect(uri);
 }, 30000); // 30s timeout
 
 afterAll(async () => {
   // 3. Clean up
-  if (mongoose.connection.db) {
-    await mongoose.connection.db.dropDatabase();
+  if (connection.db) {
+    await connection.db.dropDatabase();
   }
-  await mongoose.disconnect();
+  await disconnect();
   await mongoServer.stop();
 }, 30000);
 

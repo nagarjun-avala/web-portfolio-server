@@ -1,4 +1,7 @@
-const requireAdmin = (req, res, next) => {
+import { Request, Response, NextFunction } from 'express';
+
+
+const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
   const apiKey = req.headers["x-api-key"];
   if (apiKey && apiKey === process.env.ADMIN_API_KEY) {
     next();
@@ -8,5 +11,4 @@ const requireAdmin = (req, res, next) => {
       .json({ success: false, message: "Forbidden: Invalid API Key" });
   }
 };
-
-module.exports = { requireAdmin };
+export { requireAdmin };
