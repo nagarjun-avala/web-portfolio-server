@@ -7,10 +7,20 @@ node_modules
 .env.dev
 
 # Files
-seed.json
 coverage
+dist
 
 # IDE
 .idea
+.vscode
 
 # extras
+lib/db.ts
+/src/generated/prisma
+
+/generated/prisma
+
+
+# Seed data
+seed.json
+prisma/seed.ts

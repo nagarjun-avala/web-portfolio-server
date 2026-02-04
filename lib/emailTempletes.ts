@@ -1,8 +1,13 @@
-const UserAcknowledge = ({
-  name,
-  designition = "Digital Designer &amp; Developer",
-}) => {
-  return `<!DOCTYPE html>
+interface UserAcknowledgeProps {
+    name: string;
+    designation?: string;
+}
+
+export const UserAcknowledge = ({
+    name,
+    designation = "Digital Designer & Developer",
+}: UserAcknowledgeProps): string => {
+    return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -93,7 +98,7 @@ const UserAcknowledge = ({
                                             ${name}
                                         </p>
                                         <p style="margin: 5px 0 0 0; font-size: 12px; color: #666666;">
-                                            ${designition}
+                                            ${designation}
                                         </p>
                                     </td>
                                     <td align="right" style="vertical-align: top;">
@@ -118,8 +123,22 @@ const UserAcknowledge = ({
 </html>`;
 };
 
-const AdminAcknowledge = ({ name, email, subject = "", message, ip = "" }) => {
-  return `<!DOCTYPE html>
+interface AdminAcknowledgeProps {
+    name: string;
+    email: string;
+    subject?: string;
+    message: string;
+    ip?: string;
+}
+
+export const AdminAcknowledge = ({
+    name,
+    email,
+    subject = "",
+    message,
+    ip = "",
+}: AdminAcknowledgeProps): string => {
+    return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -147,7 +166,7 @@ const AdminAcknowledge = ({ name, email, subject = "", message, ip = "" }) => {
 <body style="margin: 0; padding: 0; background-color: #f1f5f9; color: #334155;">
 
     <div style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; mso-hide: all;">
-        New lead: [Lead Name] - [Subject Line]
+        New lead: ${name} - ${subject}
     </div>
 
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f1f5f9;">
@@ -207,26 +226,26 @@ const AdminAcknowledge = ({ name, email, subject = "", message, ip = "" }) => {
                                                 </td>
                                             </tr>
                                         </table>
-                                        ${
-                                          subject &&
-                                          subject !== "" &&
-                                          `<!-- Row 2: Subject -->
+                                        ${subject &&
+            subject !== ""
+            ? `<!-- Row 2: Subject -->
                                         <div style="margin-bottom: 24px;">
                                             <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8;">Subject</p>
                                             <p style="margin: 0; font-size: 15px; font-weight: 500; color: #1e293b;">${subject}</p>
                                         </div>`
-                                        }
+            : ""
+        }
 
-                                        ${
-                                          ip &&
-                                          ip !== "" &&
-                                          `
+                                        ${ip &&
+            ip !== ""
+            ? `
                                         <!-- Row 3: IP Address (Conditional) -->
                                         <div style="margin-bottom: 24px;">
                                             <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8;">IP Address</p>
                                             <p style="margin: 0; font-size: 15px; font-weight: 500; color: #1e293b;">${ip}</p>
                                         </div>`
-                                        }
+            : ""
+        }
 
                                         <!-- Row 3: Message -->
                                         <div>
@@ -279,5 +298,3 @@ const AdminAcknowledge = ({ name, email, subject = "", message, ip = "" }) => {
 </body>
 </html>`;
 };
-
-module.exports = { UserAcknowledge, AdminAcknowledge };

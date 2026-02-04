@@ -2,6 +2,9 @@ services:
   # Your Express Server
   api:
     build: .
+    volumes:
+      # Map host folder ./uploads to container folder /app/uploads
+      - ./uploads:/app/uploads
     ports:
       - "5000:5000"
     environment:
@@ -17,3 +20,16 @@ services:
       - FORCE_COLOR=${FORCE_COLOR}
       - LOG_EMOJI=${LOG_EMOJI}
     restart: always
+
+  mongo:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password123
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

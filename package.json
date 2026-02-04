@@ -2,6 +2,7 @@
   "name": "server",
   "version": "0.1.0",
   "description": "",
+  "type": "module",
   "license": "ISC",
   "keywords": [
     "express",
@@ -9,28 +10,48 @@
     "portfolio"
   ],
   "author": "Nagarjun Avala",
-  "type": "commonjs",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch index.ts"
   },
   "dependencies": {
+    "@prisma/client": "5.22.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/jsonwebtoken": "^9.0.10",
+    "apicache": "^1.6.3",
+    "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.2",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
     "helmet": "^8.1.0",
-    "mongoose": "^9.1.5",
-    "morgan": "^1.10.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongodb": "^7.0.0",
+    "multer": "^2.0.2",
+    "prisma": "5.22.0",
     "resend": "^6.8.0",
     "ua-parser-js": "^2.0.8"
   },
   "devDependencies": {
+    "@types/apicache": "^1.6.8",
+    "@types/compression": "^1.8.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/morgan": "^1.9.10",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^25.0.10",
     "jest": "^30.2.0",
     "mongodb-memory-server": "^11.0.1",
+    "morgan": "^1.10.1",
     "nodemon": "^3.1.11",
-    "supertest": "^7.2.2"
+    "supertest": "^7.2.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }
