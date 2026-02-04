@@ -1,7 +1,6 @@
 import crypto from "crypto";
 
-
-const name = "server"
+const name = "server";
 
 /**
  * Enterprise Standards & Type Definitions
@@ -56,14 +55,14 @@ const THEMES = {
 const COLORS = SUPPORTS_COLOR
   ? { ...THEMES[THEME], RESET: "\x1b[0m", DIM: "\x1b[2m" }
   : {
-    INFO: "",
-    DEBUG: "",
-    WARN: "",
-    ERROR: "",
-    SUCCESS: "",
-    RESET: "",
-    DIM: "",
-  };
+      INFO: "",
+      DEBUG: "",
+      WARN: "",
+      ERROR: "",
+      SUCCESS: "",
+      RESET: "",
+      DIM: "",
+    };
 
 const EMOJI = USE_EMOJI
   ? { INFO: "ℹ️", DEBUG: "🐞", WARN: "⚠️", ERROR: "❌", SUCCESS: "✅" }
