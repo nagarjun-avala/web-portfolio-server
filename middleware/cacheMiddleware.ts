@@ -1,7 +1,8 @@
 import apicache from "apicache";
 import { Request, Response } from "express";
 
-const cache = apicache.middleware;
+export const cache = apicache.middleware;
+export const clearCache = apicache.clear;
 
 // Configure cache to only cache successful responses
 // and potentially add other options
