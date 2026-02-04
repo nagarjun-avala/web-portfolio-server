@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import pkg from "@/package.json";
+import pkg from "@/package.json" with { type: "json" };
 const { name, version } = pkg;
 
 /**
@@ -55,14 +55,14 @@ const THEMES = {
 const COLORS = SUPPORTS_COLOR
   ? { ...THEMES[THEME], RESET: "\x1b[0m", DIM: "\x1b[2m" }
   : {
-    INFO: "",
-    DEBUG: "",
-    WARN: "",
-    ERROR: "",
-    SUCCESS: "",
-    RESET: "",
-    DIM: "",
-  };
+      INFO: "",
+      DEBUG: "",
+      WARN: "",
+      ERROR: "",
+      SUCCESS: "",
+      RESET: "",
+      DIM: "",
+    };
 
 const EMOJI = USE_EMOJI
   ? { INFO: "ℹ️", DEBUG: "🐞", WARN: "⚠️", ERROR: "❌", SUCCESS: "✅" }

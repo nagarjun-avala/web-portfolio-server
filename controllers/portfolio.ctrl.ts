@@ -440,12 +440,10 @@ const PortfolioController = {
     try {
       const data = req.body;
       if (!data || !data.email) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "Invalid backup data. Email required.",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "Invalid backup data. Email required.",
+        });
       }
 
       // 1. Delete Everything
@@ -490,8 +488,8 @@ const PortfolioController = {
           about: about ? { create: { ...removeMeta(about) } } : undefined,
           techStack: techStack
             ? {
-              create: techStack.map((t: any) => removeMeta(t)),
-            }
+                create: techStack.map((t: any) => removeMeta(t)),
+              }
             : undefined,
         },
       });
@@ -518,12 +516,10 @@ const PortfolioController = {
       res.json({ success: true, message: "Restoration complete." });
     } catch (error) {
       console.error(error);
-      res
-        .status(500)
-        .json({
-          success: false,
-          message: "Restore Failed: " + (error as Error).message,
-        });
+      res.status(500).json({
+        success: false,
+        message: "Restore Failed: " + (error as Error).message,
+      });
     }
   },
 };
