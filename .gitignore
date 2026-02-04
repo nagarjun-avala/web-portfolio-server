@@ -15,10 +15,10 @@ dist
 .vscode
 
 # extras
-lib/db.ts
 /src/generated/prisma
 
 /generated/prisma
+docker-compose-mongo.yml
 
 
 # Seed data

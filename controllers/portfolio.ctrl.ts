@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { db } from '@/lib/db';
-import { seedIfNeeded } from "@/lib/helper";
 import { slugify, ensureUniqueSlug } from '../utils/slugify';
 import { calculateReadingTime } from '../utils/readingTime';
 
@@ -40,11 +39,9 @@ const PortfolioController = {
         ]);
 
       if (!profile) {
-        await seedIfNeeded();
-        // Return a specific status to prompt a retry or handle on client
         return res
           .status(404)
-          .json({ success: false, message: "Profile initialized with seed data. Please refresh." });
+          .json({ success: false, message: "Profile not found" });
       }
 
       const responseData = {
