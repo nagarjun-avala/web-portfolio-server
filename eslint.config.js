@@ -13,11 +13,21 @@ export default [
     rules: {
       "@typescript-eslint/no-unused-vars": [
         "warn",
-        { argsIgnorePattern: "^_" },
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
       ],
       "no-console": "warn",
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-namespace": "off",
+    },
+  },
+  {
+    files: ["scripts/**/*.ts", "prisma/seed.ts"],
+    rules: {
+      "no-console": "off",
     },
   },
   {

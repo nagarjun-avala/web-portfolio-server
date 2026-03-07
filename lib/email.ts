@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { UserAcknowledge, AdminAcknowledge } from "@/lib/emailTempletes";
+import logger from "@/utils/logger";
 
 let resend: Resend | null = null;
 let isInitialized = false;
@@ -11,7 +12,7 @@ const getResendClient = () => {
   if (API_KEY) {
     resend = new Resend(API_KEY);
   } else {
-    console.warn(
+    logger.warn(
       "⚠️ RESEND_API_KEY is missing. Email notifications will be disabled.",
     );
   }
@@ -40,12 +41,12 @@ export async function sendContactEmail({
 
   // If Resend is not initialized, log a warning and return early to prevent errors
   if (!client) {
-    console.warn("Email service not initialized. Skipping email sending.");
+    logger.warn("Email service not initialized. Skipping email sending.");
     return;
   }
 
   try {
-    console.log("Sending mail data:", { name, email, message, ip });
+    logger.info("Sending mail data", { emailData: { name, email, message, ip } });
 
     // Send notification to the portfolio owner (Admin)
     await client.emails.send({
@@ -63,9 +64,9 @@ export async function sendContactEmail({
       html: UserAcknowledge({ name }),
     });
 
-    console.log("Emails sent successfully.");
+    logger.success("Emails sent successfully.");
   } catch (error) {
-    console.error("Email send error:", error);
+    logger.error("Email send error", { error: (error as Error).message });
     // Re-throw or handle gracefully depending on requirements.
     // Usually, we don't want to fail the HTTP request just because the email failed,
     // but logging it is crucial.

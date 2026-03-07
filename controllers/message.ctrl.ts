@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { db } from "@/lib/db";
+import { Prisma } from "@prisma/client";
+import logger from "@/utils/logger";
 
 const MessageController = {
   getMessages: async (req: Request, res: Response) => {
@@ -10,7 +12,7 @@ const MessageController = {
       const search = (req.query.search as string) || "";
       const status = req.query.status as string; // 'read', 'unread', or undefined for all
 
-      const whereClause: any = {};
+      const whereClause: Prisma.MessageWhereInput = {};
 
       if (status === "read") whereClause.isRead = true;
       if (status === "unread") whereClause.isRead = false;
@@ -45,7 +47,7 @@ const MessageController = {
         unreadCount,
       });
     } catch (error) {
-      console.error(error);
+      logger.error("Error fetching messages", { error });
       res
         .status(500)
         .json({ success: false, message: "Error fetching messages" });
@@ -72,7 +74,7 @@ const MessageController = {
 
       res.json({ success: true, data: updated });
     } catch (error) {
-      console.error(error);
+      logger.error("Error updating status", { error });
       res
         .status(500)
         .json({ success: false, message: "Error updating status" });
@@ -94,7 +96,7 @@ const MessageController = {
 
       res.json({ success: true, message: `Deleted ${ids.length} messages` });
     } catch (error) {
-      console.error(error);
+      logger.error("Error deleting messages", { error });
       res
         .status(500)
         .json({ success: false, message: "Error deleting messages" });
@@ -122,7 +124,7 @@ const MessageController = {
 
       res.json({ success: true, message: `Updated ${ids.length} messages` });
     } catch (error) {
-      console.error(error);
+      logger.error("Error bulk updating status", { error });
       res
         .status(500)
         .json({ success: false, message: "Error updating status" });
@@ -144,7 +146,7 @@ const MessageController = {
 
       res.json({ success: true, message: "Message deleted" });
     } catch (error) {
-      console.error(error);
+      logger.error("Error deleting message", { error });
       res
         .status(500)
         .json({ success: false, message: "Error deleting message" });

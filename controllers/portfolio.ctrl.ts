@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { db } from "@/lib/db";
 import { slugify, ensureUniqueSlug } from "../utils/slugify";
 import { calculateReadingTime } from "../utils/readingTime";
+import logger from "@/utils/logger";
 
 // Helper to dynamically select the Prisma delegate based on the section URL param
 const getPrismaDelegate = (section: string) => {
@@ -37,11 +38,11 @@ const PortfolioController = {
               },
             },
           }),
-          db.project.findMany({ orderBy: { order: "asc" } }),
-          db.experience.findMany({ orderBy: { order: "asc" } }),
-          db.education.findMany({ orderBy: { order: "asc" } }),
-          db.certification.findMany({ orderBy: { order: "asc" } }),
-          db.blog.findMany({ orderBy: { order: "asc" } }),
+          db.project.findMany({ orderBy: { order: "asc" }, take: 200 }),
+          db.experience.findMany({ orderBy: { order: "asc" }, take: 100 }),
+          db.education.findMany({ orderBy: { order: "asc" }, take: 100 }),
+          db.certification.findMany({ orderBy: { order: "asc" }, take: 200 }),
+          db.blog.findMany({ orderBy: { order: "asc" }, take: 200 }),
         ]);
 
       if (!profile) {
@@ -61,7 +62,7 @@ const PortfolioController = {
 
       res.json({ success: true, data: responseData });
     } catch (error) {
-      console.error("Fetch Error:", error);
+      logger.error("Fetch Error:", { error: error instanceof Error ? error.message : String(error) });
       res.status(500).json({ success: false, message: "Server Error" });
     }
   },
@@ -178,7 +179,7 @@ const PortfolioController = {
 
       res.json({ success: true, message: "Item added", data: newItem });
     } catch (error) {
-      console.error(error);
+      logger.error("Create section error:", { error: error instanceof Error ? error.message : String(error) });
       res
         .status(500)
         .json({ success: false, message: (error as Error).message });
@@ -335,7 +336,7 @@ const PortfolioController = {
           // Create new techStack items
           if (techStack.length > 0) {
             await db.techStackItem.createMany({
-              data: techStack.map((item: any, index: number) => ({
+              data: techStack.map((item: { category: string; items: string[]; order?: number }, index: number) => ({
                 profileId: existingProfile.id,
                 category: item.category,
                 items: item.items,
@@ -347,15 +348,14 @@ const PortfolioController = {
 
         // Prepare update data WITHOUT nested upserts to avoid transactions
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { id, _id, createdAt, updatedAt, email, ...scalarProfileData } =
+        const { id: _id1, _id: _id2, createdAt: _createdAt, updatedAt: _updatedAt, email, ...scalarProfileData } =
           profileData;
 
         // Handle Hero separately
         // Sync Avatar from Profile if available
-        let heroUpdateData: any = {};
+        let heroUpdateData: Record<string, unknown> = {};
         if (hero) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { id, profileId, createdAt, updatedAt, ...heroData } = hero;
+          const { id: _hid, profileId: _hpid, createdAt: _hca, updatedAt: _hua, ...heroData } = hero;
           heroUpdateData = { ...heroData };
         }
 
@@ -389,8 +389,7 @@ const PortfolioController = {
             where: { profileId: existingProfile.id },
           });
 
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { id, profileId, createdAt, updatedAt, ...aboutData } = about;
+          const { id: _aid, profileId: _apid, createdAt: _aca, updatedAt: _aua, ...aboutData } = about;
 
           if (existingAbout) {
             await db.about.update({
@@ -465,10 +464,10 @@ const PortfolioController = {
       // BUT for restore, we usually assume fresh DB. Let's just create new IDs.
 
       const {
-        id,
-        _id,
-        createdAt,
-        updatedAt,
+        id: _id1,
+        _id: _id2,
+        createdAt: _createdAt,
+        updatedAt: _updatedAt,
         hero,
         about,
         techStack,
@@ -481,14 +480,14 @@ const PortfolioController = {
         ...profileFields
       } = data;
 
-      const newProfile = await db.profile.create({
+      const _newProfile = await db.profile.create({
         data: {
           ...profileFields,
           hero: hero ? { create: { ...removeMeta(hero) } } : undefined,
           about: about ? { create: { ...removeMeta(about) } } : undefined,
           techStack: techStack
             ? {
-                create: techStack.map((t: any) => removeMeta(t)),
+                create: techStack.map((t: Record<string, unknown>) => removeMeta(t)),
               }
             : undefined,
         },
@@ -515,7 +514,7 @@ const PortfolioController = {
 
       res.json({ success: true, message: "Restoration complete." });
     } catch (error) {
-      console.error(error);
+      logger.error("Restore error:", { error: error instanceof Error ? error.message : String(error) });
       res.status(500).json({
         success: false,
         message: "Restore Failed: " + (error as Error).message,
@@ -525,8 +524,8 @@ const PortfolioController = {
 };
 
 // Helper: Remove DB specific meta fields to avoid insert errors
-const removeMeta = (obj: any) => {
-  const { id, _id, profileId, createdAt, updatedAt, ...rest } = obj;
+const removeMeta = (obj: Record<string, unknown>): Record<string, unknown> => {
+  const { id: _id, _id: __id, profileId: _pid, createdAt: _ca, updatedAt: _ua, ...rest } = obj;
   return rest;
 };
 

@@ -46,12 +46,14 @@ server/
 ### Installation
 
 1.  **Install dependencies**:
+
     ```bash
     npm install
     ```
 
 2.  **Environment Setup**:
     Create a `.env` file in the root directory based on `.env.example`:
+
     ```env
     # Core
     PORT=5000
@@ -63,7 +65,7 @@ server/
     # Security
     JWT_SECRET="your-super-secret-key"
     ADMIN_API_KEY="your-admin-api-key"
-    
+
     # CORS
     FRONTEND_URLS="http://localhost:3000,https://your-domain.com"
 
@@ -73,52 +75,55 @@ server/
 
 3.  **Database Setup**:
     Generate the Prisma client:
+
     ```bash
     npx prisma generate
     ```
 
     (Optional) Seed the database with initial data:
+
     ```bash
     npm run seed
     ```
 
 ### Running the Server
 
--   **Development Mode** (with hot-reload):
-    ```bash
-    npm run dev
-    ```
+- **Development Mode** (with hot-reload):
 
--   **Production Build**:
-    ```bash
-    npm run build
-    npm start
-    ```
+  ```bash
+  npm run dev
+  ```
+
+- **Production Build**:
+  ```bash
+  npm run build
+  npm start
+  ```
 
 ## 🧪 Testing & Quality
 
--   **Run Tests**:
-    ```bash
-    npm test
-    ```
--   **Lint Code**:
-    ```bash
-    npm run lint
-    ```
--   **Format Code**:
-    ```bash
-    npm run format
-    ```
+- **Run Tests**:
+  ```bash
+  npm test
+  ```
+- **Lint Code**:
+  ```bash
+  npm run lint
+  ```
+- **Format Code**:
+  ```bash
+  npm run format
+  ```
 
 ## 📖 API Endpoints Overview
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `GET` | `/api/portfolio` | Get public portfolio data | Public |
-| `POST` | `/api/contact` | Submit contact form | Public |
-| `POST` | `/api/visitors` | Track visitor | Public |
-| `POST` | `/api/auth/login` | Admin login | Public |
-| `GET` | `/api/admin/*` | Protected admin routes | JWT/API Key |
+| Method | Endpoint          | Description               | Auth        |
+| ------ | ----------------- | ------------------------- | ----------- |
+| `GET`  | `/api/portfolio`  | Get public portfolio data | Public      |
+| `POST` | `/api/contact`    | Submit contact form       | Public      |
+| `POST` | `/api/visitors`   | Track visitor             | Public      |
+| `POST` | `/api/auth/login` | Admin login               | Public      |
+| `GET`  | `/api/admin/*`    | Protected admin routes    | JWT/API Key |
 
 ## 🤝 Contributing
 

@@ -4,7 +4,7 @@ import compression from "compression";
 import cors from "cors";
 import morgan from "morgan";
 import bodyParser from "body-parser";
-import rateLimit from "express-rate-limit";
+import { globalLimiter } from "./middleware/rateLimiter";
 
 // Routes
 // Routes
@@ -81,13 +81,7 @@ export const createServer = () => {
   app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
   // Rate Limiting (Basic DDoS protection)
-  const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
-  app.use(limiter);
+  app.use(globalLimiter);
   app.use(requestLogger); // 👈 MUST be early
 
   // 2. Routes

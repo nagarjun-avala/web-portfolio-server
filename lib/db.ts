@@ -7,7 +7,7 @@ import logger from "@/utils/logger";
  */
 
 // Initialize Prisma with default settings
-const prisma = new PrismaClient({} as any);
+const prisma = new PrismaClient();
 
 /**
  * 1. CONNECTION ESTABLISHMENT
@@ -29,7 +29,7 @@ export const connectDB = async (): Promise<void> => {
   } catch (error) {
     logger.error(
       `❌ Failed to connect to ${dbType}`,
-      error instanceof Error ? error : { error },
+      { error: error instanceof Error ? error.message : String(error) },
     );
     // Terminate process if DB is mandatory for startup
     process.exit(1);
@@ -47,7 +47,7 @@ export const disconnectDB = async (): Promise<void> => {
   } catch (error) {
     logger.error(
       "❌ Error during database disconnection",
-      error instanceof Error ? error : { error },
+      { error: error instanceof Error ? error.message : String(error) },
     );
   }
 };

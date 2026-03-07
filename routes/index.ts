@@ -4,6 +4,7 @@ import messageRoutes from "@/routes/message.route";
 import contactRoutes from "@/routes/contact.route";
 import seoRoutes from "@/routes/seo.route";
 import ogRoutes from "@/routes/og.route";
+import visitorRoutes from "@/routes/visitor.route";
 
 const router = Router();
 
@@ -13,5 +14,6 @@ router.use("/messages", messageRoutes);
 router.use("/contact", contactRoutes);
 router.use("/seo-settings", seoRoutes);
 router.use("/og", ogRoutes);
+router.use("/visitors", visitorRoutes);
 
 export default router;

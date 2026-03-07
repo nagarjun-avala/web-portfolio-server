@@ -1,5 +1,5 @@
-import { config } from "dotenv";
-config();
+import "dotenv/config";
+import "@/utils/env"; // Validate env vars immediately after loading them
 import { createServer } from "@/server";
 import logger from "@/utils/logger";
 import { connectDB, disconnectDB } from "@/lib/db.js";
