@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import logger from "@/utils/logger";
 
 const OgController = {
   /**
@@ -119,7 +120,7 @@ const OgController = {
 
       res.json({ success: true, image: dataUri, svg: svg });
     } catch (error) {
-      console.error("OG Generation Error:", error);
+      logger.error("OG Generation Error", { error: (error as Error).message });
       res
         .status(500)
         .json({ success: false, message: "Failed to generate image" });

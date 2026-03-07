@@ -1,7 +1,8 @@
-import { Router } from "express";
-import multer from "multer";
+import { Router, Request, Response, NextFunction } from "express";
+import multer, { FileFilterCallback } from "multer";
 import path from "path";
 import fs from "fs";
+import logger from "@/utils/logger";
 
 const router = Router();
 
@@ -25,15 +26,28 @@ const storage = multer.diskStorage({
 });
 
 // Filter
-const fileFilter = (req: any, file: any, cb: any) => {
-  // Accept images and PDFs
-  if (
-    file.mimetype.startsWith("image/") ||
-    file.mimetype === "application/pdf"
-  ) {
+const fileFilter = (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
+  // 1. Prevent double extensions (e.g., image.jpg.php)
+  const parts = file.originalname.split(".");
+  if (parts.length > 2) {
+    cb(null, false);
+    return;
+  }
+
+  // 2. Accept only specific images and PDFs
+  const allowedMimeTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "image/svg+xml",
+    "application/pdf",
+  ];
+
+  if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Only images and PDFs are allowed"), false);
+    cb(null, false);
   }
 };
 
@@ -43,8 +57,29 @@ const upload = multer({
   fileFilter: fileFilter,
 });
 
+// Middleware to catch Multer-specific errors cleanly
+const uploadSingle = (req: Request, res: Response, next: NextFunction) => {
+  const uploader = upload.single("file");
+  uploader(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: "File exceeds the 5MB size limit.",
+          });
+      }
+      return res.status(400).json({ success: false, message: err.message });
+    } else if (err) {
+      return res.status(400).json({ success: false, message: err.message });
+    }
+    next();
+  });
+};
+
 // POST /api/upload
-router.post("/", upload.single("file"), (req, res) => {
+router.post("/", uploadSingle, (req, res) => {
   try {
     if (!req.file) {
       return res
@@ -71,7 +106,7 @@ router.post("/", upload.single("file"), (req, res) => {
           }
         }
       } catch (err) {
-        console.error("Failed to delete old file:", err);
+        logger.warn("Failed to delete old file", { error: (err as Error).message });
         // Don't fail the request, just log it
       }
     }

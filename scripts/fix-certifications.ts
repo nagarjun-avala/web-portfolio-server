@@ -24,7 +24,7 @@ async function fixCertifications() {
     nullNameCerts.forEach((cert, index) => {
       console.log(`${index + 1}. ID: ${cert.id}`);
       console.log(`   Organization: ${cert.organization}`);
-      console.log(`   Title (legacy): ${(cert as any).title || "N/A"}`);
+      console.log(`   Title (legacy): ${(cert as Record<string, unknown>).title || "N/A"}`);
       console.log("");
     });
 
@@ -33,7 +33,7 @@ async function fixCertifications() {
     for (const cert of nullNameCerts) {
       // Use title if available, otherwise use organization name + "Certification"
       const newName =
-        (cert as any).title || `${cert.organization} Certification`;
+        (cert as Record<string, unknown>).title || `${cert.organization} Certification`;
 
       await db.certification.update({
         where: { id: cert.id },

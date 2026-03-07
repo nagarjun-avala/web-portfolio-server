@@ -12,7 +12,7 @@ export interface LogMeta {
   path?: string;
   method?: string;
   userId?: string | null;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const ENV = process.env.NODE_ENV || "development";
@@ -83,6 +83,7 @@ const CURRENT_LEVEL =
 /**
  * Recursive sanitizer to redact sensitive PII/Secrets at any depth
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function sanitize(obj: any) {
   if (!obj || typeof obj !== "object") return obj;
 
@@ -92,6 +93,7 @@ function sanitize(obj: any) {
     return { message, stack, ...rest };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const safe: Record<string, any> = Array.isArray(obj) ? [] : {};
   for (const key in obj) {
     const val = obj[key];
@@ -109,6 +111,7 @@ function sanitize(obj: any) {
 /**
  * Prevents server crashes on circular references during JSON stringify
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function safeStringify(obj: any): string {
   const cache = new Set();
   return JSON.stringify(obj, (key, value) => {
@@ -161,8 +164,11 @@ export function log(level: LogLevel, message: string, meta?: LogMeta): void {
 
   const output = format(level, message, meta);
 
+  // eslint-disable-next-line no-console
   if (level === "error") console.error(output);
+  // eslint-disable-next-line no-console
   else if (level === "warn") console.warn(output);
+  // eslint-disable-next-line no-console
   else console.log(output);
 }
 

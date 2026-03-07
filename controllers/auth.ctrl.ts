@@ -6,32 +6,6 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || "secret_key_change_me";
 
-export const register = async (req: Request, res: Response) => {
-  // This should be protected or removed after initial setup
-  const { name, email, password } = req.body;
-
-  try {
-    const existingAdmin = await prisma.admin.findUnique({ where: { email } });
-    if (existingAdmin)
-      return res.status(400).json({ message: "Email already exists" });
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const admin = await prisma.admin.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-      },
-    });
-
-    res.status(201).json({ message: "Admin registered successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error });
-  }
-};
-
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
@@ -69,14 +43,14 @@ export const logout = (req: Request, res: Response) => {
   res.json({ message: "Logged out successfully" });
 };
 
-export const getMe = async (req: Request | any, res: Response) => {
+export const getMe = async (req: Request, res: Response) => {
   try {
-    const admin = await prisma.admin.findUnique({ where: { id: req.user.id } });
+    const admin = await prisma.admin.findUnique({ where: { id: req.user!.id } });
     if (!admin) return res.status(404).json({ message: "Admin not found" });
 
-    const { password, ...adminData } = admin;
+    const { password: _password, ...adminData } = admin;
     res.json(adminData);
-  } catch (error) {
+  } catch (_error) {
     res.status(500).json({ message: "Server error" });
   }
 };

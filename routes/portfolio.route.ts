@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import portfolioCtrl from "@/controllers/portfolio.ctrl";
 import asyncHandler from "@/utils/asyncHandler";
 import { verifyToken } from "@/middleware/auth";
@@ -29,12 +29,10 @@ router.get(
 
 // Helper for invalidating cache
 import { clearCache } from "@/middleware/cacheMiddleware";
-const invalidatePortfolioCache = (req: any, res: any, next: any) => {
-  clearCache("/api/portfolio"); // Main portfolio data
-  // Potentially clear other specific caches if needed, but main one is most critical
-  // We can't easily clear dynamic routes like /projects/:slug without more complex logic
-  // or a wildcard clear which apicache supports but might be overkill.
-  // For now, clearing the main dashboard is the most important sync step.
+const invalidatePortfolioCache = (_req: Request, _res: Response, next: NextFunction) => {
+  // Clear the ENTIRE cache on any mutation (since they are rare)
+  // This guarantees dynamic slug-based routes (e.g. /projects/:slug) aren't serving stale data.
+  clearCache();
   next();
 };
 

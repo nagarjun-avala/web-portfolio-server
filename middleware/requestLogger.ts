@@ -10,13 +10,12 @@ declare global {
       log: (level: LogLevel, message: string, meta?: LogMeta) => void;
       user?: {
         id: string;
-        [key: string]: any;
+        [key: string]: unknown;
       };
     }
   }
 }
 
-const isProd = process.env.NODE_ENV === "production";
 
 // Configuration for enterprise standards
 const SLOW_REQUEST_MS = 500;
@@ -35,17 +34,18 @@ const SENSITIVE_FIELDS = [
  * Note: The base logger also performs sanitization, but we do it here for
  * request-specific clarity before the data leaves the middleware.
  */
-function sanitize(obj: any): any {
+function sanitize(obj: unknown): unknown {
   if (!obj || typeof obj !== "object") return obj;
-  const safe: any = Array.isArray(obj) ? [] : {};
+  const safe: Record<string, unknown> = {};
 
-  for (const key in obj) {
+  for (const key in obj as Record<string, unknown>) {
+    const val = (obj as Record<string, unknown>)[key];
     if (SENSITIVE_FIELDS.includes(key.toLowerCase())) {
       safe[key] = "[REDACTED]";
-    } else if (typeof obj[key] === "object") {
-      safe[key] = sanitize(obj[key]);
+    } else if (typeof val === "object") {
+      safe[key] = sanitize(val);
     } else {
-      safe[key] = obj[key];
+      safe[key] = val;
     }
   }
   return safe;
