@@ -16,7 +16,6 @@ declare global {
   }
 }
 
-
 // Configuration for enterprise standards
 const SLOW_REQUEST_MS = 500;
 const SKIP_PATHS = ["/health", "/favicon.ico"];

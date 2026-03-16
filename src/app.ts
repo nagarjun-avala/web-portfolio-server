@@ -6,63 +6,43 @@ import morgan from "morgan";
 import bodyParser from "body-parser";
 import { globalLimiter } from "./middleware/rateLimiter";
 
-// Routes
-// Routes
 import routes from "./routes/index.js";
 import uploadRoutes from "./routes/upload.route"; // Import upload routes
 import authRoutes from "./routes/auth.routes"; // Import auth routes
-import requestLogger from "@/middleware/requestLogger";
+import requestLogger from "./middleware/requestLogger";
 import errorCapture from "./middleware/errorCapture";
 import cookieParser from "cookie-parser";
 import path from "path"; // Import path
 
 export const createServer = () => {
-  // ... (rest of code)
-
   const app = express();
-  const FRONTEND_URLS = (
-    process.env.FRONTEND_URL || "http://localhost:3000,"
-  ).split(",");
-
-  // CORS options
-  const corsOptions = {
-    origin: (
-      origin: string | undefined,
-      callback: (err: Error | null, allow?: boolean) => void,
-    ) => {
-      // allow requests with no origin (like mobile apps, curl, or server-to-server)
-      if (!origin) return callback(null, true);
-
-      // Allow all in development to avoid CORS issues on network/localhost
-      if (process.env.NODE_ENV !== "production") {
-        return callback(null, true);
-      }
-
-      if (FRONTEND_URLS.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true, // <-- required if you send cookies from frontend
-    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-Requested-With",
-      "Accept",
-      "x-api-key",
-    ],
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  };
 
   // 1. Middleware
+  app.set("trust proxy", 1);
+
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: "cross-origin" },
+    }),
+  );
+
+  const allowedOrigins = process.env.CORS_ORIGINS?.split(",") || [];
+
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error("CORS not allowed"));
+        }
+      },
+      credentials: true,
+    }),
+  );
+
   app.use(express.json());
-  app.use(helmet());
   app.use(compression());
-  // app.use(cors());
-  app.use(cors(corsOptions));
   app.use(json());
   app.use(bodyParser.json());
   app.use(urlencoded({ extended: true }));

@@ -12,10 +12,10 @@
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["src/*"]
     },
     "skipLibCheck": true
   },
-  "include": ["**/*.ts", "prisma/**/*"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*.ts", "src/scripts/**/*.ts", "**/*.test.ts"],
+  "exclude": ["node_modules", "prisma"]
 }

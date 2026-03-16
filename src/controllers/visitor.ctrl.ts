@@ -34,7 +34,8 @@ export const logVisit = async (req: Request, res: Response): Promise<void> => {
   const bot = isBot(rawUA);
 
   const page = (req.body?.page as string) || "/";
-  const referrer = (req.body?.referrer as string) || req.headers["referer"] || null;
+  const referrer =
+    (req.body?.referrer as string) || req.headers["referer"] || null;
 
   await db.visitorLog.create({
     data: {
@@ -73,7 +74,8 @@ export const getLogs = async (req: Request, res: Response): Promise<void> => {
   }
   if (req.query.from || req.query.to) {
     where.createdAt = {};
-    if (req.query.from) where.createdAt.gte = new Date(req.query.from as string);
+    if (req.query.from)
+      where.createdAt.gte = new Date(req.query.from as string);
     if (req.query.to) where.createdAt.lte = new Date(req.query.to as string);
   }
 

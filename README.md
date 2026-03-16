@@ -67,7 +67,7 @@ server/
     ADMIN_API_KEY="your-admin-api-key"
 
     # CORS
-    FRONTEND_URLS="http://localhost:3000,https://your-domain.com"
+    CORS_ORIGINS="http://localhost:3000,https://your-domain.com"
 
     # Services
     RESEND_API_KEY="your-resend-api-key"

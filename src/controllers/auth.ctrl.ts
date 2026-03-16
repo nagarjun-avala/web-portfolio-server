@@ -45,7 +45,9 @@ export const logout = (req: Request, res: Response) => {
 
 export const getMe = async (req: Request, res: Response) => {
   try {
-    const admin = await prisma.admin.findUnique({ where: { id: req.user!.id } });
+    const admin = await prisma.admin.findUnique({
+      where: { id: req.user!.id },
+    });
     if (!admin) return res.status(404).json({ message: "Admin not found" });
 
     const { password: _password, ...adminData } = admin;

@@ -6,7 +6,12 @@ import logger from "@/utils/logger";
 const ContactController = {
   sendMessage: async (req: Request, res: Response) => {
     try {
-      const { name, email, message, "cf-turnstile-response": turnstileToken } = req.body;
+      const {
+        name,
+        email,
+        message,
+        "cf-turnstile-response": turnstileToken,
+      } = req.body;
 
       if (!name || !email || !message) {
         return res
@@ -15,11 +20,15 @@ const ContactController = {
       }
 
       if (!turnstileToken) {
-        return res.status(400).json({ success: false, message: "Captcha token is required" });
+        return res
+          .status(400)
+          .json({ success: false, message: "Captcha token is required" });
       }
 
       // Verify the token with Cloudflare
-      const RECAPTCHA_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY || "1x0000000000000000000000000000000AA"; // Dummy for testing
+      const RECAPTCHA_SECRET_KEY =
+        process.env.TURNSTILE_SECRET_KEY ||
+        "1x0000000000000000000000000000000AA"; // Dummy for testing
       const verificationResponse = await fetch(
         "https://challenges.cloudflare.com/turnstile/v0/siteverify",
         {
@@ -28,10 +37,12 @@ const ContactController = {
             "Content-Type": "application/x-www-form-urlencoded",
           },
           body: `secret=${RECAPTCHA_SECRET_KEY}&response=${turnstileToken}`,
-        }
+        },
       );
 
-      const verificationResult = await verificationResponse.json() as { success: boolean };
+      const verificationResult = (await verificationResponse.json()) as {
+        success: boolean;
+      };
 
       if (!verificationResult.success) {
         return res.status(400).json({
@@ -52,7 +63,9 @@ const ContactController = {
       try {
         await sendContactEmail({ name, email, message });
       } catch (emailError) {
-        logger.warn("Failed to send contact email", { error: (emailError as Error).message });
+        logger.warn("Failed to send contact email", {
+          error: (emailError as Error).message,
+        });
       }
 
       res.status(201).json({ success: true, message: "Sent" });

@@ -55,7 +55,9 @@ const SeoController = {
 
       res.json({ success: true, data: settings });
     } catch (error) {
-      logger.error("SEO Settings Fetch Error", { error: (error as Error).message });
+      logger.error("SEO Settings Fetch Error", {
+        error: (error as Error).message,
+      });
       res
         .status(500)
         .json({ success: false, message: (error as Error).message });
@@ -118,7 +120,9 @@ const SeoController = {
         data: settings,
       });
     } catch (error) {
-      logger.error("SEO Settings Update Error", { error: (error as Error).message });
+      logger.error("SEO Settings Update Error", {
+        error: (error as Error).message,
+      });
       res
         .status(500)
         .json({ success: false, message: (error as Error).message });
@@ -242,7 +246,9 @@ const SeoController = {
         data: settings,
       });
     } catch (error) {
-      logger.error("SEO Settings Reset Error", { error: (error as Error).message });
+      logger.error("SEO Settings Reset Error", {
+        error: (error as Error).message,
+      });
       res
         .status(500)
         .json({ success: false, message: (error as Error).message });
