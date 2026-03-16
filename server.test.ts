@@ -1,5 +1,5 @@
 import request from "supertest";
-import { createServer } from "./server";
+import { createServer } from "./src/app";
 
 describe("Server Health Check", () => {
   const app = createServer();
