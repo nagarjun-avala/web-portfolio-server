@@ -29,7 +29,11 @@ router.get(
 
 // Helper for invalidating cache
 import { clearCache } from "@/middleware/cacheMiddleware";
-const invalidatePortfolioCache = (_req: Request, _res: Response, next: NextFunction) => {
+const invalidatePortfolioCache = (
+  _req: Request,
+  _res: Response,
+  next: NextFunction,
+) => {
   // Clear the ENTIRE cache on any mutation (since they are rare)
   // This guarantees dynamic slug-based routes (e.g. /projects/:slug) aren't serving stale data.
   clearCache();

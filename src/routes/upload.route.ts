@@ -26,7 +26,11 @@ const storage = multer.diskStorage({
 });
 
 // Filter
-const fileFilter = (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
+const fileFilter = (
+  _req: Request,
+  file: Express.Multer.File,
+  cb: FileFilterCallback,
+) => {
   // 1. Prevent double extensions (e.g., image.jpg.php)
   const parts = file.originalname.split(".");
   if (parts.length > 2) {
@@ -63,12 +67,10 @@ const uploadSingle = (req: Request, res: Response, next: NextFunction) => {
   uploader(req, res, (err) => {
     if (err instanceof multer.MulterError) {
       if (err.code === "LIMIT_FILE_SIZE") {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "File exceeds the 5MB size limit.",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "File exceeds the 5MB size limit.",
+        });
       }
       return res.status(400).json({ success: false, message: err.message });
     } else if (err) {
@@ -106,7 +108,9 @@ router.post("/", uploadSingle, (req, res) => {
           }
         }
       } catch (err) {
-        logger.warn("Failed to delete old file", { error: (err as Error).message });
+        logger.warn("Failed to delete old file", {
+          error: (err as Error).message,
+        });
         // Don't fail the request, just log it
       }
     }

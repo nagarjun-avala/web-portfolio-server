@@ -27,10 +27,9 @@ export const connectDB = async (): Promise<void> => {
       provider: dbType.toLowerCase(),
     });
   } catch (error) {
-    logger.error(
-      `❌ Failed to connect to ${dbType}`,
-      { error: error instanceof Error ? error.message : String(error) },
-    );
+    logger.error(`❌ Failed to connect to ${dbType}`, {
+      error: error instanceof Error ? error.message : String(error),
+    });
     // Terminate process if DB is mandatory for startup
     process.exit(1);
   }
@@ -45,10 +44,9 @@ export const disconnectDB = async (): Promise<void> => {
     await prisma.$disconnect();
     logger.info("🔌 Database connection closed successfully");
   } catch (error) {
-    logger.error(
-      "❌ Error during database disconnection",
-      { error: error instanceof Error ? error.message : String(error) },
-    );
+    logger.error("❌ Error during database disconnection", {
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 };
 

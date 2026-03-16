@@ -46,7 +46,9 @@ export async function sendContactEmail({
   }
 
   try {
-    logger.info("Sending mail data", { emailData: { name, email, message, ip } });
+    logger.info("Sending mail data", {
+      emailData: { name, email, message, ip },
+    });
 
     // Send notification to the portfolio owner (Admin)
     await client.emails.send({

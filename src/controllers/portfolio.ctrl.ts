@@ -62,7 +62,9 @@ const PortfolioController = {
 
       res.json({ success: true, data: responseData });
     } catch (error) {
-      logger.error("Fetch Error:", { error: error instanceof Error ? error.message : String(error) });
+      logger.error("Fetch Error:", {
+        error: error instanceof Error ? error.message : String(error),
+      });
       res.status(500).json({ success: false, message: "Server Error" });
     }
   },
@@ -179,7 +181,9 @@ const PortfolioController = {
 
       res.json({ success: true, message: "Item added", data: newItem });
     } catch (error) {
-      logger.error("Create section error:", { error: error instanceof Error ? error.message : String(error) });
+      logger.error("Create section error:", {
+        error: error instanceof Error ? error.message : String(error),
+      });
       res
         .status(500)
         .json({ success: false, message: (error as Error).message });
@@ -336,26 +340,42 @@ const PortfolioController = {
           // Create new techStack items
           if (techStack.length > 0) {
             await db.techStackItem.createMany({
-              data: techStack.map((item: { category: string; items: string[]; order?: number }, index: number) => ({
-                profileId: existingProfile.id,
-                category: item.category,
-                items: item.items,
-                order: item.order !== undefined ? item.order : index,
-              })),
+              data: techStack.map(
+                (
+                  item: { category: string; items: string[]; order?: number },
+                  index: number,
+                ) => ({
+                  profileId: existingProfile.id,
+                  category: item.category,
+                  items: item.items,
+                  order: item.order !== undefined ? item.order : index,
+                }),
+              ),
             });
           }
         }
 
         // Prepare update data WITHOUT nested upserts to avoid transactions
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { id: _id1, _id: _id2, createdAt: _createdAt, updatedAt: _updatedAt, email, ...scalarProfileData } =
-          profileData;
+        const {
+          id: _id1,
+          _id: _id2,
+          createdAt: _createdAt,
+          updatedAt: _updatedAt,
+          email: _email,
+          ...scalarProfileData
+        } = profileData;
 
         // Handle Hero separately
         // Sync Avatar from Profile if available
         let heroUpdateData: Record<string, unknown> = {};
         if (hero) {
-          const { id: _hid, profileId: _hpid, createdAt: _hca, updatedAt: _hua, ...heroData } = hero;
+          const {
+            id: _hid,
+            profileId: _hpid,
+            createdAt: _hca,
+            updatedAt: _hua,
+            ...heroData
+          } = hero;
           heroUpdateData = { ...heroData };
         }
 
@@ -389,7 +409,13 @@ const PortfolioController = {
             where: { profileId: existingProfile.id },
           });
 
-          const { id: _aid, profileId: _apid, createdAt: _aca, updatedAt: _aua, ...aboutData } = about;
+          const {
+            id: _aid,
+            profileId: _apid,
+            createdAt: _aca,
+            updatedAt: _aua,
+            ...aboutData
+          } = about;
 
           if (existingAbout) {
             await db.about.update({
@@ -487,7 +513,9 @@ const PortfolioController = {
           about: about ? { create: { ...removeMeta(about) } } : undefined,
           techStack: techStack
             ? {
-                create: techStack.map((t: Record<string, unknown>) => removeMeta(t)),
+                create: techStack.map((t: Record<string, unknown>) =>
+                  removeMeta(t),
+                ),
               }
             : undefined,
         },
@@ -514,7 +542,9 @@ const PortfolioController = {
 
       res.json({ success: true, message: "Restoration complete." });
     } catch (error) {
-      logger.error("Restore error:", { error: error instanceof Error ? error.message : String(error) });
+      logger.error("Restore error:", {
+        error: error instanceof Error ? error.message : String(error),
+      });
       res.status(500).json({
         success: false,
         message: "Restore Failed: " + (error as Error).message,
@@ -525,7 +555,14 @@ const PortfolioController = {
 
 // Helper: Remove DB specific meta fields to avoid insert errors
 const removeMeta = (obj: Record<string, unknown>): Record<string, unknown> => {
-  const { id: _id, _id: __id, profileId: _pid, createdAt: _ca, updatedAt: _ua, ...rest } = obj;
+  const {
+    id: _id,
+    _id: __id,
+    profileId: _pid,
+    createdAt: _ca,
+    updatedAt: _ua,
+    ...rest
+  } = obj;
   return rest;
 };
 
