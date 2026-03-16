@@ -4,13 +4,13 @@ import compression from "compression";
 import cors from "cors";
 import morgan from "morgan";
 import bodyParser from "body-parser";
-import { globalLimiter } from "./middleware/rateLimiter";
+import { globalLimiter } from "@/middleware/rateLimiter";
 
-import routes from "./routes/index.js";
-import uploadRoutes from "./routes/upload.route"; // Import upload routes
-import authRoutes from "./routes/auth.routes"; // Import auth routes
-import requestLogger from "./middleware/requestLogger";
-import errorCapture from "./middleware/errorCapture";
+import routes from "@/routes/index";
+import uploadRoutes from "@/routes/upload.route"; // Import upload routes
+import authRoutes from "@/routes/auth.routes"; // Import auth routes
+import requestLogger from "@/middleware/requestLogger";
+import errorCapture from "@/middleware/errorCapture";
 import cookieParser from "cookie-parser";
 import path from "path"; // Import path
 

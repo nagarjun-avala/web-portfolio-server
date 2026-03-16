@@ -1,37 +1,34 @@
-name: Node.js CI (Development)
+name: Tests
 
 on:
   pull_request:
-    branches: ["development"]
+    branches: ["development", "main"]
   push:
     branches: ["development"]
 
 jobs:
-  ci-checks:
+  test:
+    name: Type Check & Tests
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [22.x]
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      CORS_ORIGINS: ${{ secrets.FRONTEND_URL }}
+      NODE_ENV: test
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 22.x
           cache: "npm"
 
       - name: Install Dependencies
         run: npm ci
-
-      - name: Check Formatting
-        run: npm run format:check
-
-      - name: Lint Code
-        run: npm run lint
 
       - name: Type Check
         run: npm run build

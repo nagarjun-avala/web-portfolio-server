@@ -60,7 +60,6 @@ jobs:
               -e PORT=${{ secrets.PORT }} \
               -e DATABASE_URL='${{ secrets.DATABASE_URL }}' \
               -e RESEND_API_KEY='${{ secrets.RESEND_API_KEY }}' \
-              -e ADMIN_API_KEY='${{ secrets.ADMIN_API_KEY }}' \
               -e CORS_ORIGINS='${{ secrets.FRONTEND_URL }}' \
               -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
               -e NODE_ENV='production' \
