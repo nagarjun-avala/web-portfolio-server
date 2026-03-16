@@ -10,11 +10,11 @@
     "portfolio"
   ],
   "author": "Nagarjun Avala",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc && tsc-alias -p tsconfig.json --resolve-full-paths",
-    "start": "node dist/index.js",
-    "dev": "tsx watch index.ts",
+    "start": "node dist/src/index.js",
+    "dev": "tsx watch src/index.ts",
     "seed": "tsx prisma/seed.ts",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "test:watch": "jest --watch",

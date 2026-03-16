@@ -4,7 +4,7 @@ const envSchema = z.object({
   PORT: z.string().optional().default("8080"),
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
-  FRONTEND_URLS: z.string().min(1, "FRONTEND_URLS is required"),
+  CORS_ORIGINS: z.string().min(1, "CORS_ORIGINS is required"),
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
