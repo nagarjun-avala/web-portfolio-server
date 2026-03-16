@@ -64,7 +64,6 @@ server/
 
     # Security
     JWT_SECRET="your-super-secret-key"
-    ADMIN_API_KEY="your-admin-api-key"
 
     # CORS
     CORS_ORIGINS="http://localhost:3000,https://your-domain.com"
