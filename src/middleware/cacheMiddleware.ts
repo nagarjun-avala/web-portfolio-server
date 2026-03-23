@@ -2,7 +2,7 @@ import apicache from "apicache";
 import { Request, Response } from "express";
 
 export const cache = apicache.middleware;
-export const clearCache = apicache.clear;
+export const clearCache = (target?: string) => apicache.clear(target);
 
 // Configure cache to only cache successful responses
 // and potentially add other options

@@ -1,44 +1,36 @@
 import { Router, Request, Response, NextFunction } from "express";
 import multer, { FileFilterCallback } from "multer";
-import path from "path";
-import fs from "fs";
+import { v2 as cloudinary, UploadApiOptions } from "cloudinary";
+import { Readable } from "stream";
 import logger from "@/utils/logger";
+import { verifyToken } from "@/middleware/auth";
 
 const router = Router();
 
-// Configure Storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadPath = path.join(process.cwd(), "uploads");
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    // Unique filename: timestamp + random + ext
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname),
-    );
-  },
+// ─── Cloudinary config ──────────────────────────────────────────────────────
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Filter
+// ─── Storage: memory (we stream the buffer directly to Cloudinary) ───────────
+// multer-storage-cloudinary only supports Cloudinary v1; we have v2, so we
+// use multer's built-in memory storage and pipe the buffer ourselves.
+
+// ─── File filter ──────────────────────────────────────────────────────────────
 const fileFilter = (
   _req: Request,
   file: Express.Multer.File,
   cb: FileFilterCallback,
 ) => {
-  // 1. Prevent double extensions (e.g., image.jpg.php)
+  // Reject double-extension filenames (e.g., image.jpg.php)
   const parts = file.originalname.split(".");
   if (parts.length > 2) {
     cb(null, false);
     return;
   }
 
-  // 2. Accept only specific images and PDFs
   const allowedMimeTypes = [
     "image/jpeg",
     "image/png",
@@ -48,20 +40,42 @@ const fileFilter = (
     "application/pdf",
   ];
 
-  if (allowedMimeTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(null, false);
-  }
+  cb(null, allowedMimeTypes.includes(file.mimetype));
 };
 
 const upload = multer({
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-  fileFilter: fileFilter,
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  fileFilter,
 });
 
-// Middleware to catch Multer-specific errors cleanly
+// ─── Helper: upload buffer → Cloudinary ──────────────────────────────────────
+function uploadToCloudinary(
+  buffer: Buffer,
+  options: UploadApiOptions,
+): Promise<{ secure_url: string; public_id: string }> {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(options, (err, result) => {
+      if (err || !result) return reject(err ?? new Error("Upload failed"));
+      resolve({ secure_url: result.secure_url, public_id: result.public_id });
+    });
+    Readable.from(buffer).pipe(stream);
+  });
+}
+
+// ─── Helper: extract public_id from a Cloudinary URL ─────────────────────────
+// e.g. https://res.cloudinary.com/<cloud>/image/upload/v123/portfolio/abc.jpg
+//   → "portfolio/abc"
+function extractPublicId(url: string): string | null {
+  try {
+    const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[a-z]+)?$/i);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Multer error wrapper ─────────────────────────────────────────────────────
 const uploadSingle = (req: Request, res: Response, next: NextFunction) => {
   const uploader = upload.single("file");
   uploader(req, res, (err) => {
@@ -80,38 +94,47 @@ const uploadSingle = (req: Request, res: Response, next: NextFunction) => {
   });
 };
 
-// POST /api/upload
-router.post("/", uploadSingle, (req, res) => {
+// ─── POST /api/upload  (auth required) ───────────────────────────────────────
+router.post("/", verifyToken, uploadSingle, async (req, res) => {
   try {
     if (!req.file) {
-      return res
-        .status(400)
-        .json({ success: false, message: "No file uploaded" });
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded or file type not allowed.",
+      });
     }
 
-    // Return the accessible URL
-    // Return the accessible URL
-    // Should point to the SERVER URL where static files are served
-    const SERVER_URL = process.env.SERVER_URL || "http://localhost:5000";
-    const fileUrl = `${SERVER_URL}/uploads/${req.file.filename}`;
+    const ext = req.file.originalname.split(".").pop()?.toLowerCase();
+    const isPdf = ext === "pdf";
 
-    // Cleanup Old File if exists
-    const oldUrl = req.body.oldUrl;
+    // Stream the in-memory buffer directly to Cloudinary v2
+    const { secure_url: fileUrl, public_id: publicId } =
+      await uploadToCloudinary(req.file.buffer, {
+        folder: "portfolio",
+        resource_type: "auto", // handles images AND PDFs
+        ...(isPdf ? {} : { format: ext }),
+        allowed_formats: ["jpg", "jpeg", "png", "gif", "webp", "svg", "pdf"],
+      });
+
+    // ── Delete old Cloudinary file if provided ──
+    const oldUrl = req.body.oldUrl as string | undefined;
     if (oldUrl) {
-      try {
-        // Extract filename from URL (e.g. http://localhost:5000/uploads/file-123.jpg -> file-123.jpg)
-        const oldFilename = oldUrl.split("/").pop();
-        if (oldFilename) {
-          const oldPath = path.join(process.cwd(), "uploads", oldFilename);
-          if (fs.existsSync(oldPath)) {
-            fs.unlinkSync(oldPath);
+      const oldPublicId = extractPublicId(oldUrl);
+      if (oldPublicId) {
+        try {
+          // Try image first, then raw (for PDFs)
+          const result = await cloudinary.uploader.destroy(oldPublicId);
+          if (result.result === "not found") {
+            await cloudinary.uploader.destroy(oldPublicId, {
+              resource_type: "raw",
+            });
           }
+        } catch (err) {
+          logger.warn("Failed to delete old Cloudinary file", {
+            publicId: oldPublicId,
+            error: (err as Error).message,
+          });
         }
-      } catch (err) {
-        logger.warn("Failed to delete old file", {
-          error: (err as Error).message,
-        });
-        // Don't fail the request, just log it
       }
     }
 
@@ -119,52 +142,52 @@ router.post("/", uploadSingle, (req, res) => {
       success: true,
       message: "File uploaded successfully",
       url: fileUrl,
-      filename: req.file.filename,
+      publicId,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: (error as Error).message });
   }
 });
 
-// GET /api/upload - List all files
-router.get("/", (req, res) => {
+// ─── GET /api/upload - List files in the portfolio folder ────────────────────
+router.get("/", async (_req, res) => {
   try {
-    const uploadPath = path.join(process.cwd(), "uploads");
+    const [imageResult, rawResult] = await Promise.all([
+      cloudinary.api.resources({
+        type: "upload",
+        prefix: "portfolio/",
+        resource_type: "image",
+        max_results: 100,
+      }),
+      cloudinary.api.resources({
+        type: "upload",
+        prefix: "portfolio/",
+        resource_type: "raw",
+        max_results: 100,
+      }),
+    ]);
 
-    if (!fs.existsSync(uploadPath)) {
-      return res.json({ success: true, files: [] });
-    }
+    const toFile = (r: {
+      public_id: string;
+      secure_url: string;
+      bytes: number;
+      created_at: string;
+      format: string;
+    }) => ({
+      publicId: r.public_id,
+      url: r.secure_url,
+      size: r.bytes,
+      createdAt: r.created_at,
+      format: r.format,
+    });
 
-    const files = fs
-      .readdirSync(uploadPath)
-      .filter((file) => {
-        // Filter for images and PDFs only, ignore hidden files
-        const ext = path.extname(file).toLowerCase();
-        return (
-          !file.startsWith(".") &&
-          [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".pdf"].includes(
-            ext,
-          )
-        );
-      })
-      .map((file) => {
-        const filePath = path.join(uploadPath, file);
-        const stats = fs.statSync(filePath);
-        const SERVER_URL = process.env.SERVER_URL || "http://localhost:5000";
-
-        return {
-          filename: file,
-          url: `${SERVER_URL}/uploads/${file}`,
-          size: stats.size,
-          createdAt: stats.birthtime,
-          mimetype: path.extname(file).replace(".", ""),
-        };
-      })
-      // Sort by newest first
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
+    const files = [
+      ...imageResult.resources.map(toFile),
+      ...rawResult.resources.map(toFile),
+    ].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
 
     res.json({ success: true, files });
   } catch (error) {
@@ -172,17 +195,31 @@ router.get("/", (req, res) => {
   }
 });
 
-// DELETE /api/upload/:filename - Delete a file
-router.delete("/:filename", (req, res) => {
+// ─── DELETE /api/upload/:publicId - Delete by Cloudinary public_id ───────────
+// public_id can contain slashes (e.g. "portfolio/abc"), so we use Express 5 wildcard syntax
+router.delete("/{*publicId}", verifyToken, async (req, res) => {
   try {
-    const { filename } = req.params;
-    const filePath = path.join(process.cwd(), "uploads", filename);
+    const publicId = req.params.publicId as string;
+    if (!publicId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "publicId is required" });
+    }
 
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    // Try image, then raw
+    let result = await cloudinary.uploader.destroy(publicId);
+    if (result.result === "not found") {
+      result = await cloudinary.uploader.destroy(publicId, {
+        resource_type: "raw",
+      });
+    }
+
+    if (result.result === "ok" || result.result === "not found") {
       res.json({ success: true, message: "File deleted successfully" });
     } else {
-      res.status(404).json({ success: false, message: "File not found" });
+      res
+        .status(404)
+        .json({ success: false, message: "File could not be deleted" });
     }
   } catch (error) {
     res.status(500).json({ success: false, message: (error as Error).message });
