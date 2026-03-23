@@ -725,13 +725,13 @@ model SeoSettings {
 
 model VisitorLog {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  ip        String?  // Anonymized IP
+  ip        String? // Anonymized IP
   userAgent String?
   browser   String?
   os        String?
-  device    String?  // "desktop" | "mobile" | "tablet"
+  device    String? // "desktop" | "mobile" | "tablet"
   page      String   @default("/") // Page visited
-  referrer  String?  // HTTP Referer header
+  referrer  String? // HTTP Referer header
   isBot     Boolean  @default(false)
   createdAt DateTime @default(now())
 

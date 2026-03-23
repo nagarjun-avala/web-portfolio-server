@@ -1,9 +1,8 @@
-import express, { json, urlencoded } from "express";
+import express, { urlencoded } from "express";
 import helmet from "helmet";
 import compression from "compression";
 import cors from "cors";
 import morgan from "morgan";
-import bodyParser from "body-parser";
 import { globalLimiter } from "@/middleware/rateLimiter";
 
 import routes from "@/routes/index";
@@ -12,7 +11,6 @@ import authRoutes from "@/routes/auth.routes"; // Import auth routes
 import requestLogger from "@/middleware/requestLogger";
 import errorCapture from "@/middleware/errorCapture";
 import cookieParser from "cookie-parser";
-import path from "path"; // Import path
 
 export const createServer = () => {
   const app = express();
@@ -43,8 +41,6 @@ export const createServer = () => {
 
   app.use(express.json());
   app.use(compression());
-  app.use(json());
-  app.use(bodyParser.json());
   app.use(urlencoded({ extended: true }));
 
   app.use(cookieParser()); // Add cookie parser
@@ -57,14 +53,10 @@ export const createServer = () => {
     );
   }
 
-  // Serve Uploads
-  app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
-
-  // Rate Limiting (Basic DDoS protection)
+  // Rate Limiting (Basic DDoS protection) — must be before static files
   app.use(globalLimiter);
   app.use(requestLogger); // 👈 MUST be early
 
-  // 2. Routes
   // 2. Routes
   app.use("/api", routes);
   app.use("/api/auth", authRoutes); // Register auth routes
