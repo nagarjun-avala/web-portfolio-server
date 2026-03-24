@@ -28,7 +28,7 @@ jobs:
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v4
         with:
-          context: ./server
+          context: .
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:${{ steps.branch_name.outputs.branch }}
