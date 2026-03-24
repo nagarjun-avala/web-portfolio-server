@@ -87,15 +87,15 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:main
 
             # 2. Stop and remove the old container
-            docker stop backend-prod || true
-            docker rm backend-prod || true
+            docker stop portfolio-backend || true
+            docker rm portfolio-backend || true
 
             # 3. Clean up old images/containers to save space
             docker system prune -f
 
             # 4. Start the new container
             docker run -d \
-              --name backend-prod \
+              --name portfolio-backend \
               -p 5000:5000 \
               --restart unless-stopped \
               -e PORT=5000 \
