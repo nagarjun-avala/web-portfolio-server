@@ -107,14 +107,22 @@ router.post("/", verifyToken, uploadSingle, async (req, res) => {
     const ext = req.file.originalname.split(".").pop()?.toLowerCase();
     const isPdf = ext === "pdf";
 
-    // Stream the in-memory buffer directly to Cloudinary v2
+    // Set up options depending on the file type
+    const uploadOptions: import("cloudinary").UploadApiOptions = isPdf
+      ? {
+          folder: "portfolio",
+          resource_type: "raw",
+          public_id: `resume-${Date.now()}-${Math.round(Math.random() * 1e9)}.pdf`,
+        }
+      : {
+          folder: "portfolio",
+          resource_type: "auto",
+          format: ext,
+          allowed_formats: ["jpg", "jpeg", "png", "gif", "webp", "svg"],
+        };
+
     const { secure_url: fileUrl, public_id: publicId } =
-      await uploadToCloudinary(req.file.buffer, {
-        folder: "portfolio",
-        resource_type: "auto", // handles images AND PDFs
-        ...(isPdf ? {} : { format: ext }),
-        allowed_formats: ["jpg", "jpeg", "png", "gif", "webp", "svg", "pdf"],
-      });
+      await uploadToCloudinary(req.file.buffer, uploadOptions);
 
     // ── Delete old Cloudinary file if provided ──
     const oldUrl = req.body.oldUrl as string | undefined;
