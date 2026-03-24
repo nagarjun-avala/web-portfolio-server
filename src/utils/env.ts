@@ -9,6 +9,30 @@ const envSchema = z.object({
     .enum(["development", "production", "test"])
     .default("development"),
   RESEND_API_KEY: z.string().optional(),
+
+  // Redis
+  REDIS_URL: z.string().optional().default("redis://localhost:6379"),
+
+  // Cloudinary
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
+
+  // Logging
+  LOG_LEVEL: z
+    .enum(["error", "warn", "info", "http", "verbose", "debug", "silly"])
+    .optional()
+    .default("debug"),
+  LOG_EMOJI: z
+    .string()
+    .optional()
+    .default("false")
+    .transform((val) => val === "true"),
+  LOG_THEME: z.enum(["dark", "light"]).optional().default("dark"),
+  FORCE_COLOR: z.string().optional(),
+
+  // Captcha
+  TURNSTILE_SECRET_KEY: z.string().optional(),
 });
 
 export const env = envSchema.safeParse(process.env);

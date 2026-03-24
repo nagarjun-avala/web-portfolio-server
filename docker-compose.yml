@@ -1,21 +1,45 @@
 services:
-  # Your Express Server
+  # Redis — in-memory cache for /portfolio, /projects/:slug, /blogs/:id
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --maxmemory 128mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Express API
   api:
     build: .
+    depends_on:
+      redis:
+        condition: service_healthy
     volumes:
-      # Map host folder ./uploads to container folder /app/uploads
       - ./uploads:/app/uploads
     ports:
       - "5000:5000"
     environment:
       - PORT=${PORT}
-      # Connect to the 'mongo' service defined below
       - DATABASE_URL=${DATABASE_URL}
-      # Pass through other secrets (or use an .env file)
       - RESEND_API_KEY=${RESEND_API_KEY}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
       - NODE_ENV=${NODE_ENV}
       - LOG_LEVEL=${LOG_LEVEL}
       - FORCE_COLOR=${FORCE_COLOR}
       - LOG_EMOJI=${LOG_EMOJI}
+      # Redis — point to the 'redis' service on Docker network
+      - REDIS_URL=redis://redis:6379
     restart: always
+
+volumes:
+  redis_data:

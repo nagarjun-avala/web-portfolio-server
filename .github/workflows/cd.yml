@@ -5,7 +5,9 @@ on:
     branches: ["main", "staging"]
 
 jobs:
-  # JOB 1: BUILD & PUSH
+  # ---------------------------------------------------------------------------
+  # JOB 1: BUILD & PUSH Docker image to Docker Hub
+  # ---------------------------------------------------------------------------
   build-image:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
@@ -26,17 +28,20 @@ jobs:
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v4
         with:
-          context: .
+          context: ./server
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:${{ steps.branch_name.outputs.branch }}
             ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:latest
 
-  # JOB 2: STAGING DEPLOY (Runs ONLY on push to development)
+  # ---------------------------------------------------------------------------
+  # JOB 2: STAGING DEPLOY
+  # Provisions Redis container if not running, then deploys the backend.
+  # ---------------------------------------------------------------------------
   deploy-staging:
     name: Deploy to Staging
     needs: build-image
-    if: github.ref == 'refs/heads/development' || github.ref == 'refs/heads/staging'
+    if: github.ref == 'refs/heads/staging'
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to Staging via SSH
@@ -46,17 +51,31 @@ jobs:
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
           script: |
-            # 1. Pull the fresh image
-            docker pull ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:development
+            # 1. Ensure Redis is running (idempotent — no-op if already up)
+            if ! docker ps --filter "name=redis-staging" --filter "status=running" | grep -q redis-staging; then
+              docker rm -f redis-staging 2>/dev/null || true
+              docker run -d \
+                --name redis-staging \
+                --restart unless-stopped \
+                -p 127.0.0.1:6380:6379 \
+                redis:7-alpine \
+                redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru --save ""
+              echo "[Redis] Staging Redis started"
+            else
+              echo "[Redis] Staging Redis already running"
+            fi
 
-            # 2. Stop and remove the old container
+            # 2. Pull the fresh backend image
+            docker pull ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:staging
+
+            # 3. Stop and remove the old backend container
             docker stop backend-staging || true
             docker rm backend-staging || true
 
-            # 3. Clean up old images/containers to save space
-            docker system prune -f
+            # 4. Clean up dangling images to save space
+            docker image prune -f
 
-            # 4. Start the new container
+            # 5. Start the new backend container
             docker run -d \
               --name backend-staging \
               -p 5001:5000 \
@@ -65,11 +84,19 @@ jobs:
               -e DATABASE_URL='${{ secrets.STAGING_DATABASE_URL }}' \
               -e RESEND_API_KEY='${{ secrets.RESEND_API_KEY }}' \
               -e CORS_ORIGINS='${{ secrets.STAGING_FRONTEND_URL }}' \
-              -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
-              -e NODE_ENV='production' \
-              ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:development
+              - e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+              - e CLOUDINARY_CLOUD_NAME='${{ secrets.CLOUDINARY_CLOUD_NAME }}' \
+              - e CLOUDINARY_API_KEY='${{ secrets.CLOUDINARY_API_KEY }}' \
+              - e CLOUDINARY_API_SECRET='${{ secrets.CLOUDINARY_API_SECRET }}' \
+              - e TURNSTILE_SECRET_KEY='${{ secrets.TURNSTILE_SECRET_KEY }}' \
+              - e NODE_ENV='production' \
+              - e REDIS_URL='redis://127.0.0.1:6380' \
+              ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:staging
 
-  # JOB 3: PRODUCTION DEPLOY (Runs ONLY on push to main)
+  # ---------------------------------------------------------------------------
+  # JOB 3: PRODUCTION DEPLOY
+  # Provisions Redis container if not running, then deploys the backend.
+  # ---------------------------------------------------------------------------
   deploy-production:
     name: Deploy to Production
     needs: build-image
@@ -83,17 +110,31 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 1. Pull the fresh image
+            # 1. Ensure Redis is running (idempotent — no-op if already up)
+            if ! docker ps --filter "name=redis" --filter "status=running" | grep -q "^.*redis$"; then
+              docker rm -f redis 2>/dev/null || true
+              docker run -d \
+                --name redis \
+                --restart unless-stopped \
+                -p 127.0.0.1:6379:6379 \
+                redis:7-alpine \
+                redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru --save ""
+              echo "[Redis] Production Redis started"
+            else
+              echo "[Redis] Production Redis already running"
+            fi
+
+            # 2. Pull the fresh backend image
             docker pull ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:main
 
-            # 2. Stop and remove the old container
+            # 3. Stop and remove the old backend container
             docker stop backend || true
             docker rm backend || true
 
-            # 3. Clean up old images/containers to save space
-            docker system prune -f
+            # 4. Clean up dangling images to save space
+            docker image prune -f
 
-            # 4. Start the new container
+            # 5. Start the new backend container
             docker run -d \
               --name backend \
               -p 5000:5000 \
@@ -105,6 +146,8 @@ jobs:
               -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
               -e CLOUDINARY_CLOUD_NAME='${{ secrets.CLOUDINARY_CLOUD_NAME }}' \
               -e CLOUDINARY_API_KEY='${{ secrets.CLOUDINARY_API_KEY }}' \
-              -e CLOUDINARY_API_SECRET='${{ secrets.CLOUDINARY_API_SECRET }}' \
-              -e NODE_ENV='production' \
+              - e CLOUDINARY_API_SECRET='${{ secrets.CLOUDINARY_API_SECRET }}' \
+              - e TURNSTILE_SECRET_KEY='${{ secrets.TURNSTILE_SECRET_KEY }}' \
+              - e NODE_ENV='production' \
+              - e REDIS_URL='redis://127.0.0.1:6379' \
               ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:main
