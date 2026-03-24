@@ -2,7 +2,7 @@ name: Production & Staging Deploy
 
 on:
   push:
-    branches: ["main", "development"]
+    branches: ["main", "staging"]
 
 jobs:
   # JOB 1: BUILD & PUSH
@@ -26,7 +26,7 @@ jobs:
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v4
         with:
-          context: ./server
+          context: .
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:${{ steps.branch_name.outputs.branch }}

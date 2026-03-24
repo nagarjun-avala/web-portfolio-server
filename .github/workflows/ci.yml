@@ -23,20 +23,14 @@ jobs:
           cache: "npm"
           cache-dependency-path: package-lock.json
       - name: Install Dependencies
-        working-directory: server
         run: npm ci
       - name: Check Formatting (Prettier)
-        working-directory: server
         run: npm run format:check
       - name: Lint Code (ESLint)
-        working-directory: server
         run: npm run lint
       - name: Type Check (TypeScript)
-        working-directory: server
         run: npm run build
       - name: Run Tests (Jest)
-        working-directory: server
         run: npm test
       - name: Security Audit (npm audit)
-        working-directory: server
         run: npm audit --audit-level=high
