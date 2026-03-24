@@ -84,13 +84,13 @@ jobs:
               -e DATABASE_URL='${{ secrets.STAGING_DATABASE_URL }}' \
               -e RESEND_API_KEY='${{ secrets.RESEND_API_KEY }}' \
               -e CORS_ORIGINS='${{ secrets.STAGING_FRONTEND_URL }}' \
-              - e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
-              - e CLOUDINARY_CLOUD_NAME='${{ secrets.CLOUDINARY_CLOUD_NAME }}' \
-              - e CLOUDINARY_API_KEY='${{ secrets.CLOUDINARY_API_KEY }}' \
-              - e CLOUDINARY_API_SECRET='${{ secrets.CLOUDINARY_API_SECRET }}' \
-              - e TURNSTILE_SECRET_KEY='${{ secrets.TURNSTILE_SECRET_KEY }}' \
-              - e NODE_ENV='production' \
-              - e REDIS_URL='redis://127.0.0.1:6380' \
+              -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+              -e CLOUDINARY_CLOUD_NAME='${{ secrets.CLOUDINARY_CLOUD_NAME }}' \
+              -e CLOUDINARY_API_KEY='${{ secrets.CLOUDINARY_API_KEY }}' \
+              -e CLOUDINARY_API_SECRET='${{ secrets.CLOUDINARY_API_SECRET }}' \
+              -e TURNSTILE_SECRET_KEY='${{ secrets.TURNSTILE_SECRET_KEY }}' \
+              -e NODE_ENV='production' \
+              -e REDIS_URL='redis://127.0.0.1:6380' \
               ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:staging
 
   # ---------------------------------------------------------------------------
@@ -146,8 +146,8 @@ jobs:
               -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
               -e CLOUDINARY_CLOUD_NAME='${{ secrets.CLOUDINARY_CLOUD_NAME }}' \
               -e CLOUDINARY_API_KEY='${{ secrets.CLOUDINARY_API_KEY }}' \
-              - e CLOUDINARY_API_SECRET='${{ secrets.CLOUDINARY_API_SECRET }}' \
-              - e TURNSTILE_SECRET_KEY='${{ secrets.TURNSTILE_SECRET_KEY }}' \
-              - e NODE_ENV='production' \
-              - e REDIS_URL='redis://127.0.0.1:6379' \
+              -e CLOUDINARY_API_SECRET='${{ secrets.CLOUDINARY_API_SECRET }}' \
+              -e TURNSTILE_SECRET_KEY='${{ secrets.TURNSTILE_SECRET_KEY }}' \
+              -e NODE_ENV='production' \
+              -e REDIS_URL='redis://127.0.0.1:6379' \
               ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:main
