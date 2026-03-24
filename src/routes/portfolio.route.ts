@@ -4,39 +4,35 @@ import asyncHandler from "@/utils/asyncHandler";
 import { verifyToken } from "@/middleware/auth";
 const router = Router();
 
-import { cacheMiddleware } from "@/middleware/cacheMiddleware";
+import { redisCache, clearRedisCache } from "@/middleware/cacheMiddleware";
 
-// GET /api/portfolio (Aggregated Response)
-router.get(
-  "/",
-  cacheMiddleware("10 minutes"),
-  asyncHandler(portfolioCtrl.getPortfolioData),
-);
+// GET /api/portfolio (Aggregated Response) — cached 5 min in Redis
+router.get("/", redisCache(300), asyncHandler(portfolioCtrl.getPortfolioData));
 
 // GET /api/portfolio/projects/:slug
 router.get(
   "/projects/:slug",
-  cacheMiddleware("10 minutes"),
+  redisCache(300),
   asyncHandler(portfolioCtrl.getProjectBySlug),
 );
 
 // GET /api/portfolio/blogs/:id
 router.get(
   "/blogs/:id",
-  cacheMiddleware("10 minutes"),
+  redisCache(300),
   asyncHandler(portfolioCtrl.getBlogById),
 );
 
-// Helper for invalidating cache
-import { clearCache } from "@/middleware/cacheMiddleware";
+// Helper for invalidating cache on any mutation
 const invalidatePortfolioCache = (
   _req: Request,
   _res: Response,
   next: NextFunction,
 ) => {
-  // Clear the ENTIRE cache on any mutation (since they are rare)
-  // This guarantees dynamic slug-based routes (e.g. /projects/:slug) aren't serving stale data.
-  clearCache();
+  // Fire-and-forget: clear all /api/portfolio* cache keys in Redis
+  clearRedisCache().catch(() => {
+    /* already logged inside */
+  });
   next();
 };
 
