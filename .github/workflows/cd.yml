@@ -36,7 +36,7 @@ jobs:
   deploy-staging:
     name: Deploy to Staging
     needs: build-image
-    if: github.ref == 'refs/heads/development'
+    if: github.ref == 'refs/heads/development' || github.ref == 'refs/heads/staging'
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to Staging via SSH
@@ -87,15 +87,15 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:main
 
             # 2. Stop and remove the old container
-            docker stop portfolio-backend || true
-            docker rm portfolio-backend || true
+            docker stop backend || true
+            docker rm backend || true
 
             # 3. Clean up old images/containers to save space
             docker system prune -f
 
             # 4. Start the new container
             docker run -d \
-              --name portfolio-backend \
+              --name backend \
               -p 5000:5000 \
               --restart unless-stopped \
               -e PORT=5000 \
