@@ -316,8 +316,8 @@ model Experience {
   order Int    @default(0)
 
   // Basic Role Information
-  start       DateTime?
-  end         DateTime?
+  startDate   DateTime?
+  endDate     DateTime?
   role        String?
   company     String?
   description String?   @map("desc")

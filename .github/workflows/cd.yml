@@ -52,17 +52,20 @@ jobs:
           key: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
           script: |
             # 1. Ensure Redis is running (idempotent — no-op if already up)
+            docker network create portfolio-network 2>/dev/null || true
             if ! docker ps --filter "name=redis-staging" --filter "status=running" | grep -q redis-staging; then
               docker rm -f redis-staging 2>/dev/null || true
               docker run -d \
                 --name redis-staging \
+                --network portfolio-network \
                 --restart unless-stopped \
                 -p 127.0.0.1:6380:6379 \
                 redis:7-alpine \
                 redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru --save ""
               echo "[Redis] Staging Redis started"
             else
-              echo "[Redis] Staging Redis already running"
+              echo "[Redis] Staging Redis already running" 
+              docker network connect portfolio-network redis-staging 2>/dev/null || true
             fi
 
             # 2. Pull the fresh backend image
@@ -78,6 +81,7 @@ jobs:
             # 5. Start the new backend container
             docker run -d \
               --name backend-staging \
+              --network portfolio-network \
               -p 5001:5000 \
               --restart unless-stopped \
               -e PORT=5000 \
@@ -90,7 +94,7 @@ jobs:
               -e CLOUDINARY_API_SECRET='${{ secrets.CLOUDINARY_API_SECRET }}' \
               -e TURNSTILE_SECRET_KEY='${{ secrets.TURNSTILE_SECRET_KEY }}' \
               -e NODE_ENV='production' \
-              -e REDIS_URL='redis://127.0.0.1:6380' \
+              -e REDIS_URL='redis://redis-staging:6379' \
               ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:staging
 
   # ---------------------------------------------------------------------------
@@ -111,10 +115,12 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             # 1. Ensure Redis is running (idempotent — no-op if already up)
+            docker network create portfolio-network 2>/dev/null || true
             if ! docker ps --filter "name=redis" --filter "status=running" | grep -q "^.*redis$"; then
               docker rm -f redis 2>/dev/null || true
               docker run -d \
                 --name redis \
+                --network portfolio-network \
                 --restart unless-stopped \
                 -p 127.0.0.1:6379:6379 \
                 redis:7-alpine \
@@ -122,6 +128,7 @@ jobs:
               echo "[Redis] Production Redis started"
             else
               echo "[Redis] Production Redis already running"
+              docker network connect portfolio-network redis 2>/dev/null || true
             fi
 
             # 2. Pull the fresh backend image
@@ -137,6 +144,7 @@ jobs:
             # 5. Start the new backend container
             docker run -d \
               --name backend \
+              --network portfolio-network \
               -p 5000:5000 \
               --restart unless-stopped \
               -e PORT=5000 \
@@ -149,5 +157,5 @@ jobs:
               -e CLOUDINARY_API_SECRET='${{ secrets.CLOUDINARY_API_SECRET }}' \
               -e TURNSTILE_SECRET_KEY='${{ secrets.TURNSTILE_SECRET_KEY }}' \
               -e NODE_ENV='production' \
-              -e REDIS_URL='redis://127.0.0.1:6379' \
+              -e REDIS_URL='redis://redis:6379' \
               ${{ secrets.DOCKER_USERNAME }}/portfolio-backend:main
