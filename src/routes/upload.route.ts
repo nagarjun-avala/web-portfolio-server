@@ -38,6 +38,13 @@ const fileFilter = (
     "image/webp",
     "image/svg+xml",
     "application/pdf",
+    // video
+    "video/mp4",
+    "video/webm",
+    "video/ogg",
+    "video/quicktime",
+    "video/x-msvideo",
+    "video/x-matroska",
   ];
 
   cb(null, allowedMimeTypes.includes(file.mimetype));
@@ -45,7 +52,7 @@ const fileFilter = (
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB (videos can be large)
   fileFilter,
 });
 
@@ -83,7 +90,7 @@ const uploadSingle = (req: Request, res: Response, next: NextFunction) => {
       if (err.code === "LIMIT_FILE_SIZE") {
         return res.status(400).json({
           success: false,
-          message: "File exceeds the 5MB size limit.",
+          message: "File exceeds the 100MB size limit.",
         });
       }
       return res.status(400).json({ success: false, message: err.message });
@@ -106,6 +113,7 @@ router.post("/", verifyToken, uploadSingle, async (req, res) => {
 
     const ext = req.file.originalname.split(".").pop()?.toLowerCase();
     const isPdf = ext === "pdf";
+    const isVideo = req.file.mimetype.startsWith("video/");
 
     // Set up options depending on the file type
     const uploadOptions: import("cloudinary").UploadApiOptions = isPdf
@@ -114,12 +122,19 @@ router.post("/", verifyToken, uploadSingle, async (req, res) => {
           resource_type: "raw",
           public_id: `resume-${Date.now()}-${Math.round(Math.random() * 1e9)}.pdf`,
         }
-      : {
-          folder: "portfolio",
-          resource_type: "auto",
-          format: ext,
-          allowed_formats: ["jpg", "jpeg", "png", "gif", "webp", "svg"],
-        };
+      : isVideo
+        ? {
+            folder: "portfolio",
+            resource_type: "video",
+            format: ext,
+            allowed_formats: ["mp4", "webm", "ogg", "mov", "avi", "mkv"],
+          }
+        : {
+            folder: "portfolio",
+            resource_type: "auto",
+            format: ext,
+            allowed_formats: ["jpg", "jpeg", "png", "gif", "webp", "svg"],
+          };
 
     const { secure_url: fileUrl, public_id: publicId } =
       await uploadToCloudinary(req.file.buffer, uploadOptions);
@@ -130,9 +145,14 @@ router.post("/", verifyToken, uploadSingle, async (req, res) => {
       const oldPublicId = extractPublicId(oldUrl);
       if (oldPublicId) {
         try {
-          // Try image first, then raw (for PDFs)
-          const result = await cloudinary.uploader.destroy(oldPublicId);
-          if (result.result === "not found") {
+          // Try image → video → raw in sequence
+          let delResult = await cloudinary.uploader.destroy(oldPublicId);
+          if (delResult.result === "not found") {
+            delResult = await cloudinary.uploader.destroy(oldPublicId, {
+              resource_type: "video",
+            });
+          }
+          if (delResult.result === "not found") {
             await cloudinary.uploader.destroy(oldPublicId, {
               resource_type: "raw",
             });
@@ -160,11 +180,17 @@ router.post("/", verifyToken, uploadSingle, async (req, res) => {
 // ─── GET /api/upload - List files in the portfolio folder ────────────────────
 router.get("/", async (_req, res) => {
   try {
-    const [imageResult, rawResult] = await Promise.all([
+    const [imageResult, videoResult, rawResult] = await Promise.all([
       cloudinary.api.resources({
         type: "upload",
         prefix: "portfolio/",
         resource_type: "image",
+        max_results: 100,
+      }),
+      cloudinary.api.resources({
+        type: "upload",
+        prefix: "portfolio/",
+        resource_type: "video",
         max_results: 100,
       }),
       cloudinary.api.resources({
@@ -191,6 +217,7 @@ router.get("/", async (_req, res) => {
 
     const files = [
       ...imageResult.resources.map(toFile),
+      ...videoResult.resources.map(toFile),
       ...rawResult.resources.map(toFile),
     ].sort(
       (a, b) =>
@@ -214,8 +241,13 @@ router.delete("/{*publicId}", verifyToken, async (req, res) => {
         .json({ success: false, message: "publicId is required" });
     }
 
-    // Try image, then raw
+    // Try image → video → raw
     let result = await cloudinary.uploader.destroy(publicId);
+    if (result.result === "not found") {
+      result = await cloudinary.uploader.destroy(publicId, {
+        resource_type: "video",
+      });
+    }
     if (result.result === "not found") {
       result = await cloudinary.uploader.destroy(publicId, {
         resource_type: "raw",
