@@ -10,6 +10,16 @@ import logger from "@/utils/logger";
 const REDIS_URL = process.env.REDIS_URL ?? "redis://localhost:6379";
 
 let redis: Redis | null = null;
+let redisUnavailableLogged = false;
+
+export function logRedisUnavailable(message: string, err: unknown): void {
+  if (redisUnavailableLogged) return;
+
+  redisUnavailableLogged = true;
+  logger.warn(message, {
+    err: err instanceof Error ? err.message : String(err),
+  });
+}
 
 function createRedisClient(): Redis | null {
   try {
@@ -20,12 +30,13 @@ function createRedisClient(): Redis | null {
       connectTimeout: 2000, // 2s timeout; don't hold up the app
     });
 
-    client.on("connect", () => logger.info("[Redis] Connected"));
+    client.on("ready", () => {
+      redisUnavailableLogged = false;
+      logger.info("[Redis] Connected");
+    });
     client.on("error", (err) => {
       // Log but DON'T crash — Redis is a cache, not a critical dependency
-      logger.warn("[Redis] Connection error (cache disabled):", {
-        err: err.message,
-      });
+      logRedisUnavailable("[Redis] Connection error (cache disabled):", err);
     });
 
     return client;
