@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { redis } from "@/lib/redis";
+import { logRedisUnavailable, redis } from "@/lib/redis";
 import logger from "@/utils/logger";
 
 // ---------------------------------------------------------------------------
@@ -36,7 +36,7 @@ export function redisCache(ttl = DEFAULT_TTL) {
       }
     } catch (err) {
       // Redis read error — fall through to handler
-      logger.warn("[Redis] Cache read error:", { err: (err as Error).message });
+      logRedisUnavailable("[Redis] Cache read error:", err);
     }
 
     // Cache MISS — intercept res.json to store result
@@ -50,7 +50,7 @@ export function redisCache(ttl = DEFAULT_TTL) {
         redis
           .setex(key, ttl, serialized)
           .catch((err: Error) =>
-            logger.warn("[Redis] Cache write error:", { err: err.message }),
+            logRedisUnavailable("[Redis] Cache write error:", err),
           );
       }
       return originalJson(body);
@@ -84,7 +84,7 @@ export async function clearRedisCache(pattern = "cache:GET:/api/portfolio*") {
       }
     } while (cursor !== "0");
   } catch (err) {
-    logger.warn("[Redis] Cache clear error:", { err: (err as Error).message });
+    logRedisUnavailable("[Redis] Cache clear error:", err);
   }
 }
 

@@ -32,7 +32,7 @@ export const createServer = () => {
         if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
-          callback(new Error("CORS not allowed"));
+          callback(new Error("CORS not allowed, Orgin: " + origin));
         }
       },
       credentials: true,
